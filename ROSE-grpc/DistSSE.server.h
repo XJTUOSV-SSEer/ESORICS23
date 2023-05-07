@@ -41,6 +41,7 @@ namespace DistSSE {
         //static std::mutex cache_write_mtx;
     public:
         DistSSEServiceImpl(const std::string db_path, std::string cache_path, int concurrent) {
+            KUPRF::init();
             signal(SIGINT, abort);
             rocksdb::Options options;
             options.create_if_missing = true;

@@ -168,7 +168,7 @@ namespace DistSSE {
                         LastOp[key.substr(1, key.length() - 1)] = op_srh;
                     }
                 }else if(key == "KSE"){
-                    strcpy((char*)Kse,key.c_str());
+                    memcpy((char*)Kse,value.c_str(),16);
                 }
                 counter++;
             }
@@ -183,26 +183,6 @@ namespace DistSSE {
         }
 
         ~Client() {
-
-            // must store 'sc' and 'uc' to disk
-
-            // size_t keyword_counter = 0;
-            // std::map<std::string, std::string>::iterator it2;
-            // for (it2 = sc_mapper.begin(); it2 != sc_mapper.end(); ++it2) {
-            //     store("s" + it2->first, it2->second);
-            //     keyword_counter++;
-            // }
-
-            // std::map<std::string, size_t>::iterator it;
-            // for (it = uc_mapper.begin(); it != uc_mapper.end(); ++it) {
-            //     store("u" + it->first, std::to_string(it->second));
-            // }
-            // std::cout << "Total keyword: " << keyword_counter << std::endl;
-
-            // delete cs_db;
-
-            // std::cout << "Bye~ " << std::endl;
-
             //ROSE save to rocksdb
             size_t keyword_counter = 0;
             std::map<std::string, int>::iterator it;

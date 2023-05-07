@@ -17,7 +17,7 @@ int KUPRF::key_gen(unsigned char *out)
     bn_t ord, bn1;
     bn_new(ord);
     bn_new(bn1);
-    ep_curve_get_ord(ord);//<<<<<<
+    ep_curve_get_ord(ord);
     bn_rand_mod(bn1, ord);
     bn_write_bin(out, 32, bn1);
 
@@ -27,6 +27,33 @@ int KUPRF::key_gen(unsigned char *out)
     return 0;
 }
 
+int KUPRF::Eval(unsigned char *out, const unsigned char *key, const std::string &data){
+    unsigned char buf[256];
+    SHA512_CTX ctx;
+    ep_t ele;
+    bn_t bn1;
+
+    ep_new(ele);
+    bn_new(bn1);
+
+    SHA512_Init(&ctx);
+    SHA512_Update(&ctx, data.c_str(), data.size());
+    SHA512_Final(buf, &ctx);
+
+    ep_map(ele, buf, 64);
+
+    bn_read_bin(bn1, (const unsigned char *) key, 32);
+
+    ep_mul(ele, ele, bn1);
+
+    //size is 33
+    ep_write_bin(out, 33, ele, 1);
+
+    ep_free(ele);
+    bn_free(bn1);
+
+    return 0;
+}
 
 int KUPRF::Eval(unsigned char *out, const unsigned char *key, const string &keyword, const int id, OpType op)
 {

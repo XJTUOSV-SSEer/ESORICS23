@@ -13,11 +13,18 @@ extern "C"
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 };
-
-
 using namespace std;
 
-
+int PRF_F(unsigned char *out, const unsigned char *key, const std::string &keyword){
+    unsigned int out_len;
+    unsigned int op_data;
+    HMAC_CTX *ctx = HMAC_CTX_new();
+    HMAC_Init_ex(ctx, key, 16, EVP_sha3_256(), nullptr);
+    HMAC_Update(ctx, (const unsigned char *) keyword.c_str(), keyword.size());
+    HMAC_Final(ctx, out, &out_len);
+    HMAC_CTX_free(ctx);
+    return 0;
+}
 
 int PRF_F(unsigned char *out, const unsigned char *key, const string &keyword, const int id, OpType op)
 {

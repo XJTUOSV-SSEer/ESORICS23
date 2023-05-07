@@ -15,6 +15,7 @@ namespace DistSSE {
         return std::string((const char *) buf, (size_t) SHA256::DIGESTSIZE);
     }
 
+    //out:32位
     std::string Util::H2(const std::string message) {
         byte buf[SHA256::DIGESTSIZE];
         std::string salt = "02";

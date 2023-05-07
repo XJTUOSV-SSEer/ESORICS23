@@ -38,7 +38,7 @@ CPPFLAGS += -I/usr/local/include -I/usr/local/include/cryptopp -I. -pthread
 CXXFLAGS += -std=c++11 -O3 -g
 LDFLAGS += -L/usr/local/lib `pkg-config --libs grpc++ grpc`       \
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed \
-           -lprotobuf -lrocksdb -lz -lcryptopp -lpthread -O3 -lcrypto -lrelic -lssl 
+           -lprotobuf -lrocksdb -lz -lcryptopp -lpthread -O3 -lcrypto -lrelic -lssl
 PROTOC = protoc
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
 GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
@@ -49,19 +49,19 @@ vpath %.proto $(PROTOS_PATH)
 
 all: system-check rpc_client rpc_server benchmark random_db reset_csdb
 
-random_db : random_db.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o
+random_db : random_db.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-benchmark : benchmark.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o
+benchmark : benchmark.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-reset_csdb : reset_csdb.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o
+reset_csdb : reset_csdb.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-rpc_client: DistSSE.pb.o DistSSE.grpc.pb.o rpc_client.o DistSSE.Util.o logger.o KUPRF.o common.o
+rpc_client: DistSSE.pb.o DistSSE.grpc.pb.o rpc_client.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-rpc_server: DistSSE.pb.o DistSSE.grpc.pb.o rpc_server.o DistSSE.Util.o logger.o KUPRF.o common.o
+rpc_server: DistSSE.pb.o DistSSE.grpc.pb.o rpc_server.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 .PRECIOUS: %.grpc.pb.cc

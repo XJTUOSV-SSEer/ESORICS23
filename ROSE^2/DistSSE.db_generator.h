@@ -281,6 +281,12 @@ namespace DistSSE {
     //     logger::log(logger::INFO) << log << std::endl;
     // }
 
+    static void generation_job_2(Client *client, std::string keyword, unsigned int thread_id, size_t N_entries){
+        UpdateRequestMessage request;
+
+    }
+
+
     /**
       *
       * @param client 客户端对象
@@ -331,13 +337,6 @@ namespace DistSSE {
         auto iter_begin = serverEDB.begin() + thread_id * N_entries * 4;
         auto iter_end = iter_begin + N_entries * 4;
         for(auto iter = iter_begin; iter!= iter_end;iter+=4 ){
-            // print_hex((unsigned char*)(*iter).c_str(),(*iter).length());
-            // printf("\n");
-            // print_hex((unsigned char*)(*(iter+1)).c_str(),(*(iter+1)).length());
-            // printf("\n");
-            // print_hex((unsigned char*)(*(iter+2)).c_str(),(*(iter+2)).length());
-            // printf("\n");
-            // print_hex((unsigned char*)(*(iter+3)).c_str(),(*(iter+3)).length());
             writer->Write(client->gen_update_request_rose(
                 *iter,
                 *(iter+1),
@@ -345,20 +344,34 @@ namespace DistSSE {
                 *(iter+3)
             ));   
         }
-        // for(auto iter = iter_begin; iter!= iter_end; ){
-        //     print_hex((unsigned char*)(*iter).c_str(),(*iter).length());
-        //     printf("\n");
-        //     print_hex((unsigned char*)(*(iter+1)).c_str(),(*(iter+1)).length());
-        //     printf("\n");
-        //     print_hex((unsigned char*)(*(iter+2)).c_str(),(*(iter+2)).length());
-        //     printf("\n");
-        //     print_hex((unsigned char*)(*(iter+3)).c_str(),(*(iter+3)).length());
-        //     writer->Write(client->gen_update_request_rose(*(iter++),*(iter++),*(iter++),*(iter++)));   
-        // }
+
         // now tell server we have finished
         writer->WritesDone();
         Status status = writer->Finish();
         std::string log = "Random DB generation: thread " + std::to_string(thread_id) + " completed: " +
+                          std::to_string(N_entries) + " keyword-filename";
+        logger::log(logger::INFO) << log << std::endl;
+    }
+
+    static void generation_job_Rose_2(Client* client,const map<string,string>& serverEDB, unsigned int thread_id, size_t N_entries) {
+        // for gRPC
+        UpdateRequestMessage_Rose_2 request;
+        ClientContext context;
+        ExecuteStatus exec_status;
+        struct timeval t1, t2;
+        std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials())));
+        std::unique_ptr <ClientWriterInterface<UpdateRequestMessage_Rose_2>> writer(stub_->batch_update_Rose_2(&context, &exec_status)); //batch_update是流式传输
+        for(auto iter = serverEDB.begin(); iter!= serverEDB.end(); iter++){
+            writer->Write(client->gen_update_request_Rose_2(
+                iter->first,
+                iter->second
+            ));   
+        }
+
+        // now tell server we have finished
+        writer->WritesDone();
+        Status status = writer->Finish();
+        std::string log = "DB generation: thread " + std::to_string(thread_id) + " completed: " +
                           std::to_string(N_entries) + " keyword-filename";
         logger::log(logger::INFO) << log << std::endl;
     }
@@ -382,8 +395,53 @@ namespace DistSSE {
         threads.push_back(std::thread(generation_job_rose, &client ,serverEDB, n_threads - 1, numOfEntries2));
         for (unsigned int i = 0; i < n_threads; i++) {
             threads[i].join();
+        }   
+    }
+
+    void gen_db_Rose_2(Client &client, const std::string &file_path ,unsigned int n_threads) {
+        logger::log(logger::INFO) << "in gen_db_Rose_2(Client &client, const std::string &file_path ,unsigned int n_threads)" << std::endl;
+        std::vector <std::thread> threads;
+        //先load_data_from_file
+        FILE *f_data = fopen(file_path.c_str(), "r");
+        std::ifstream origin_file(file_path.c_str());
+        struct timeval t1, t2;
+        if(!origin_file.good()){
+            std::cout<< "could not open files " + file_path<<std::endl;
         }
-        
+        std::string line;
+        int index = 0;
+        while(getline(origin_file,line)){
+            std::stringstream ss(line);
+            std::string temp;
+            std::vector<std::string> ids;
+            std::string keyword;
+            while(getline(ss,temp,'\t')){
+                if(index == 0){
+                    keyword = temp;
+                }else if(index != 0){
+                    if(temp!=""){
+                        ids.push_back(temp);
+                    }
+                }
+                index++;
+            }
+            //这里已经获得了一行的keyword->ids，下面是client->update
+            gettimeofday(&t1, NULL);
+            for(int i=0;i<ids.size();i++){
+                cout<<ids[i]<<endl;
+                client.Update_Rose_2(keyword,ids[i],1);
+            }
+            gettimeofday(&t2, NULL);
+            logger::log_benchmark()<< "keyword: "+keyword+" "+std::to_string(ids.size())+" entries "+"update time: "
+                               << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+                               << std::endl;
+            //输出到终端
+            logger::log(logger::INFO)<< "keyword: "+keyword+" "+std::to_string(ids.size())+" entries "+"update time: "
+                                 << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+                                 << std::endl;
+            break;
+        }
+        return;
     }
 
     int string_to_int(string S){

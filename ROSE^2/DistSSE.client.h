@@ -15,11 +15,13 @@ extern "C"
 #include <iostream>
 #include <grpc++/grpc++.h>
 #include <experimental/filesystem>
+#include <math.h>
 #include "DistSSE.grpc.pb.h"
 #include "DistSSE.Util.h"
 #include "common.h"
 #include "logger.h"
 #include "KUPRF.h"
+
 
 
 using grpc::Channel;
@@ -64,6 +66,9 @@ namespace DistSSE {
         std::map<std::string,int> LastId;
         std::map<std::string, std::string> LastK, LastS, LastR;
         std::map<std::string, OpType> LastOp;
+        int N = 256;
+    
+
         int Enc_id(std::string &C_out, const int id)
         {
             AES_KEY aes_key;
@@ -105,18 +110,20 @@ namespace DistSSE {
 
         //ROSE^2
         unsigned char K_f[16];
-        unsigned char K_u[16];
         unsigned char K_s[16];
-        int N = 128;
+        std::map <std::string, ST_value> ST;
+        //temp
+        map<pair<string,string>,int> OD_del;
+        map<pair<string,int>,I_n> OD_tree;
 
     public:
         int get_Number(){
             return LastId.size();
         }
 
-        
         Client(std::shared_ptr <Channel> channel, std::string db_path) : stub_(RPC::NewStub(channel)) {
-            RAND_bytes(this->Kse, 16);
+            RAND_bytes(this->K_s, 16);
+            RAND_bytes(this->K_f, 16);
             rocksdb::Options options;
             // Util::set_db_common_options(options);
             // set options for merge operation
@@ -134,46 +141,23 @@ namespace DistSSE {
             KUPRF::init();
             std::cout << "--------The content of Rocksdb------------" << std::endl;
             for (it->SeekToFirst(); it->Valid(); it->Next()) {
-                // key = it->key().ToString();
-                // value = it->value().ToString();
-                // std::cout << key + " " + value << std::endl;
-                // if (key[0] == 's') {
-                //     sc_mapper[key.substr(1, key.length() - 1)] = value;
-                // } else {
-                //     uc_mapper[key.substr(1, key.length() - 1)] = std::stoi(value);
-                // }
-                // counter++;
-
                 //ROSE
-                /**
-                 * rocksdb中的key
-                 * LastId：以i开头
-                 * LastK：以k开头
-                 * LastS：以s开头
-                 * LastR：以r开头
-                 * LastOp：以o开头
-                */
-
                 key = it->key().ToString();
                 value = it->value().ToString();
-                if(key[0] == 'i'){
-                    LastId[key.substr(1, key.length() - 1)] = std::stoi(value);
+                if(key[0] == 'u'){
+                    ST[key.substr(1, key.length() - 1)].K_u = value;
                 }else if(key[0] == 'k'){
-                    LastK[key.substr(1, key.length() - 1)] = value;
+                    ST[key.substr(1, key.length() - 1)].delta_k = value;
+                }else if(key[0] == 'i'){
+                    ST[key.substr(1, key.length() - 1)].cnt_i = std::stoi(value);
+                }else if(key[0] == 'd'){
+                    ST[key.substr(1, key.length() - 1)].cnt_d = std::stoi(value);
                 }else if(key[0] == 's'){
-                    LastS[key.substr(1, key.length() - 1)] = value;
-                }else if(key[0] == 'r'){
-                    LastR[key.substr(1, key.length() - 1)] = value;
-                }else if(key[0] == 'o'){
-                    if(std::stoi(value) == 0){
-                        LastOp[key.substr(1, key.length() - 1)] = op_del;
-                    }else if(std::stoi(value) == 1){
-                        LastOp[key.substr(1, key.length() - 1)] = op_add;
-                    }else if(std::stoi(value) == 2){
-                        LastOp[key.substr(1, key.length() - 1)] = op_srh;
-                    }
-                }else if(key == "KSE"){
-                    strcpy((char*)Kse,key.c_str());
+                    ST[key.substr(1, key.length() - 1)].sn = std::stoi(value);
+                }else if(key == "Ks"){
+                    memcpy((char*)K_s, value.c_str(),16); //注意改一下rose
+                }else if(key == "Kf"){
+                    memcpy((char*)K_f, value.c_str(),16);
                 }
                 counter++;
             }
@@ -188,61 +172,25 @@ namespace DistSSE {
         }
 
         ~Client() {
-
-            // must store 'sc' and 'uc' to disk
-
-            // size_t keyword_counter = 0;
-            // std::map<std::string, std::string>::iterator it2;
-            // for (it2 = sc_mapper.begin(); it2 != sc_mapper.end(); ++it2) {
-            //     store("s" + it2->first, it2->second);
-            //     keyword_counter++;
-            // }
-
-            // std::map<std::string, size_t>::iterator it;
-            // for (it = uc_mapper.begin(); it != uc_mapper.end(); ++it) {
-            //     store("u" + it->first, std::to_string(it->second));
-            // }
-            // std::cout << "Total keyword: " << keyword_counter << std::endl;
-
-            // delete cs_db;
-
-            // std::cout << "Bye~ " << std::endl;
-
             //ROSE save to rocksdb
             size_t keyword_counter = 0;
-            std::map<std::string, int>::iterator it;
-            for (it = LastId.begin(); it != LastId.end(); ++it) {
-                store("i" + it->first, std::to_string(it->second));
-                keyword_counter++;
+            std::map<std::string, ST_value>::iterator it;
+            for(it = ST.begin(); it != ST.end(); it++){
+                store("u"+it->first, it->second.K_u);
+                store("k"+it->first, it->second.delta_k);
+                store("i"+it->first, to_string(it->second.cnt_i));
+                store("d"+it->first, to_string(it->second.cnt_d));
+                store("s"+it->first, to_string(it->second.sn));
+                keyword_counter ++;
             }
 
-            std::map<std::string, std::string>::iterator it2;
-            for (it2 = LastK.begin(); it2 != LastK.end(); ++it2) {
-                store("k" + it2->first, it2->second);
-            }
+            std::string K_s_str;
+            std::string K_f_str;
+            K_s_str.assign((char*)K_s,16);
+            K_f_str.assign((char*)K_f,16);
+            store("Ks", K_s_str);
+            store("Kf", K_f_str);
 
-            std::map<std::string, std::string>::iterator it3;
-            for (it3 = LastS.begin(); it3 != LastS.end(); ++it3) {
-                store("s" + it3->first, it3->second);
-            }
-
-            std::map<std::string, std::string>::iterator it4;
-            for (it4 = LastR.begin(); it4 != LastR.end(); ++it4) {
-                store("r" + it4->first, it4->second);
-            }
-
-            std::map<std::string, OpType>::iterator it5;
-            for (it5 = LastOp.begin(); it5 != LastOp.end(); ++it5) {
-                if(it5->second == op_del){
-                    store("o" + it5->first, std::to_string(0));
-                }else if(it5->second == op_add){
-                    store("o" + it5->first, std::to_string(1));
-                }else{
-                    store("o" + it5->first, std::to_string(2));
-                }
-            }
-
-            store("Kse",(char*)Kse);
             std::cout << "Total keyword: " << keyword_counter << std::endl;
             delete cs_db;
             std::cout << "Bye~ " << std::endl;
@@ -254,6 +202,243 @@ namespace DistSSE {
             s = cs_db->Put(rocksdb::WriteOptions(), k, v);
             if (s.ok()) return 0;
             else return -1;
+        }
+
+        //计算sn
+        int getSn_Rose_2(int cnt_i){
+            int Sn = 0;
+            int j = ceil(log(cnt_i)/log(2));
+            Sn = ceil(cnt_i * 1.0 / pow(2,j)) + N/pow(2,j-1)*(pow(2,j)-1);
+            return Sn;
+        }
+        std::vector<int> get_internal_nodes_Rose_2(int cnt_i){
+            std::vector<int> res;
+            for(int j=1;j<=ceil(log(cnt_i)/log(2));j++){
+                res.push_back(ceil(cnt_i * 1.0 / pow(2,j)) + N / pow(2,j-1) * (pow(2,j)-1));
+            }
+            return res;
+        }
+        
+        OMAPFindMessage gen_findMessage(std::string w, std::string idorn, int flag){
+            OMAPFindMessage findMessage;
+            findMessage.set_w(w);
+            findMessage.set_idorn(idorn);
+            findMessage.set_flag(flag);
+            return findMessage;
+        }
+
+        batchOMAPFindMessage gen_batchFindMessage(std::string w, vector<std::string> idorn, int flag){
+            batchOMAPFindMessage batchFindMessage;
+            batchFindMessage.set_w(w);
+            for(int i=0;i<idorn.size();i++){
+                batchFindMessage.add_idorn(idorn[i]);
+            }
+            batchFindMessage.set_flag(flag);
+            return batchFindMessage;
+        }
+
+        OMAPInsertMessage gen_insertMessage(std::string w, std::string id, int flag, std::string value){
+            OMAPInsertMessage insertMessage;
+            insertMessage.set_w(w);
+            insertMessage.set_idorn(id);
+            insertMessage.set_flag(flag);
+            insertMessage.set_value(value);
+            return insertMessage;
+        } 
+
+        int Update_Rose_2(std::string w, std::string id, int op){
+            KUPRF kuprf;
+            unsigned char buf_K_u[256];
+            unsigned char buf_PRF[256];
+            unsigned char buf_kuprf[256];
+            std::string K_u;
+            std::string delta_k;
+            std::string PRF;
+            int cnt_i;
+            int cnt_d;
+            int sn;
+            std::string L;
+            std::string C;
+            ExecuteStatus exec_status;
+            ClientContext context;
+            OMAPFindMessage findMessage;
+            OMAPFindReply findReply;
+            OMAPInsertMessage insertMessage;
+            //add
+            if(op == 1){
+                // if(OD_del.find(make_pair(w,id)) != OD_del.end()){
+                //     return -1;
+                // }
+                findMessage = gen_findMessage(w,id,0);
+                stub_->OMAPFind(&context,&findMessage,&findReply);
+                if(findReply.value() != ""){
+                    return -1;
+                }
+                if(ST.find(w) == ST.end()){
+                    kuprf.key_gen(buf_K_u);
+                    K_u.assign((char*) buf_K_u,32);
+                    delta_k = K_u;
+                    cnt_i = 0;
+                    cnt_d = 0;
+                    sn = 0;
+                }else{
+                    K_u = ST[w].K_u;
+                    delta_k = ST[w].delta_k;
+                    cnt_i = ST[w].cnt_i;
+                    cnt_d = ST[w].cnt_d;
+                    sn = ST[w].sn;
+                }
+                cnt_i++;
+                //OD_del[make_pair(w,id)] = cnt_i;
+                insertMessage = gen_insertMessage(w,id,0,std::to_string(cnt_i));
+                stub_->OMAPInsert(&context,&insertMessage,&exec_status);
+                sn = getSn_Rose_2(cnt_i);
+                ST[w].K_u = K_u;
+                ST[w].delta_k = delta_k;
+                ST[w].cnt_i = cnt_i;
+                ST[w].cnt_d = cnt_d;
+                ST[w].sn = sn;
+                
+                PRF_F(buf_PRF, K_f, w);
+                PRF.assign((char*) buf_PRF, 32);
+                kuprf.Eval(buf_kuprf, (unsigned char*)K_u.c_str(), Util::H1(PRF+std::to_string(cnt_i)+"1"));
+                L.assign((char*) buf_kuprf,33);
+                C = Util::Enc(K_s,16,id);
+            }
+            //del
+            else if(op == 0){
+                findMessage = gen_findMessage(w,id,0);
+                stub_->OMAPFind(&context,&findMessage,&findReply);
+                if(reply.value() == ""){
+                    return -1;
+                }
+                // if(OD_del.find(make_pair(w,id)) == OD_del.end()){
+                //     return -1;
+                // }
+                vector<I_n> Ins;
+                K_u = ST[w].K_u;
+                delta_k = ST[w].delta_k;
+                cnt_i = ST[w].cnt_i;
+                cnt_d = ST[w].cnt_d;
+                sn = ST[w].sn;
+                cnt_d++;
+                std::vector<int> N = get_internal_nodes_Rose_2(cnt_i);
+                //batchFind N;
+                batchOMAPFindMessage batchFindRequest;
+                for(int i=0;i<N.size();i++){
+                    batchFindRequest.set_w(w);
+                    batchFindRequest.add_idorn(to_string(N[i]));
+                    batchFindRequest->set_flag(1);
+                }
+                // 读取返回列表
+                batchOMAPFindReply batchFindReply;
+                stub_->batchOMAPFind(&context,&batchFindRequest,&batchFindReply);
+                for(int i=0;i<batchFindReply.value_size();i++){
+                    I_n In;
+                    if(batchFindReply.value(i) == ""){
+                        In.Node = N[i];
+                        In.Num = 0;
+                        In.lNum = 0;
+                        In.rNum = 0;
+                        if(i == N.size()-1){
+                            //如果是最后一个，那么左右子节点是叶子节点
+                            In.lNode = cnt_i % 2 == 0?cnt_i - 1:cnt_i;
+                            In.rNode = cnt_i % 2 == 0?cnt_i:cnt_i - 1;
+                        }else{
+                            In.lNode = N[i+1] % 2 == 0?N[i+1] - 1:N[i+1];
+                            In.rNode = N[i+1] % 2 == 0?N[i+1]:N[i+1] - 1;
+                        }
+                    }else{
+                        In = StringToIn(batchFindReply.value(i));
+                    }
+                    if(In.Node != -1){
+                        Ins.push_back(In);
+                    }
+                }
+                
+                //TODO：需要更多的边界讨论，例如Ins.size()>=2
+                I_n p = Ins[Ins.size()-1];
+                I_n gp = Ins[Ins.size()-2];
+                I_n sib;
+                if(p.lNode == cnt_i){
+                    sib = Ins[p.rNode];
+                }else{
+                    sib = Ins[p.lNode];
+                }
+                if(gp.Node > sn){
+                    sn = gp.Node;
+                }
+                ST[w].cnt_d = cnt_d;
+                ST[w].sn = sn;
+                if(gp.lNode == p.Node){
+                    gp.lNode = sib.Node;
+                    gp.lNum = sib.Num;
+                }else{
+                    gp.rNode = sib.Node;
+                    gp.lNum = sib.Num;
+                }
+                //这里删除那个父节点p，即置-1
+                Ins[Ins.size()-1].Node = -1;
+                //将In重新写入OD_tree
+                std::unique_ptr <ClientWriterInterface<OMAPInsertMessage>> writer(stub_->batchOMAPInsert(&context, &exec_status));
+                for(int i=0;i<Ins.size()-1;i++){
+                    if(Ins[i].lNode == Ins[i+1].Node){
+                        Ins[i].lNum++;
+                    }else{
+                        Ins[i].rNum++;
+                    }
+                    Ins[i].Num++;
+                    //OD_tree[make_pair(w,Ins[i].Node)] = Ins[i];
+                    writer->Write(InToString(Ins[i]));
+                    PRF_F(buf_PRF, K_f, w);
+                    PRF.assign((char*) buf_PRF, 32);
+                    kuprf.Eval(buf_kuprf, (unsigned char*)K_u.c_str(), Util::H1(PRF + std::to_string(Ins[i].Node) + std::to_string(Ins[i].Num)));
+                    L.assign((char*) buf_kuprf,33);
+                    C = encrypt_Rose_2(Util::H1(PRF + std::to_string(Ins[i].Node) + std::to_string(Ins[i].Num))
+                                        ,Ins[i].lNode,Ins[i].lNum,Ins[i].rNode,Ins[i].rNum);
+                }
+                writer->Write(InToString(Ins[Ins.size()-1]));//这是最后一个被删除的（置-1的）
+                writer->WritesDone();
+            }
+            //send to server
+            UpdateRequestMessage_Rose_2 request = gen_update_request_Rose_2(L,C);
+            Status status = stub_->update_Rose_2(&context, request ,&exec_status);
+            return 0;
+        }
+
+        string encrypt_Rose_2(string in1, int lNode,int lNum,int rNode,int rNum){
+            //总共长度32字节
+            string res;
+            res = to_string(lNode) + "*" + to_string(lNum) + "*" + to_string(rNode)+ "*" + to_string(rNum) + "*";
+            int remain = 32 - res.length();
+            res = res + string(remain,'#');
+            res = Util::Xor(in1,res);
+            return res;
+        }
+
+        string InToString(int Node,int Num, int lNode, int lNum, int rNode, int rNum){
+            string res;
+            res = to_string(Node) + "*" + to_string(Num) + "*" +to_string(lNode) + "*" + to_string(lNum) + "*" + to_string(rNode) + "*" + to_string(rNum);
+            return res;
+        }
+
+        I_n StringToIn(string InString){
+            I_n In;
+            vector<int> res;
+            int index1,index2 = 0;
+            for(;index2<InString.length();index2++){
+                if(index2 == '*'){
+                    res.push_back(atoi(InString.substr(index1,index2-index1).c_str()));
+                    index1 = index2 + 1;
+                }
+            }
+            In.Node = res[0];
+            In.Num = res[1];
+            In.lNode = res[2];
+            In.lNum = res[3];
+            In.rNode = res[4];
+            In.rNum = res[5];
+            return In;
         }
 
         //update过程加密一个操作块
@@ -386,13 +571,6 @@ namespace DistSSE {
             return 0;
         }
 
-//        void increase_search_time(std::string w) {
-//            {
-//                // std::lock_guard<std::mutex> lock(sc_mtx);
-//                set_search_time(w, get_search_time(w) + 1);
-//            }
-//        }
-
         size_t get_update_time(std::string w) {
             size_t update_time = 0;
             std::map<std::string, size_t>::iterator it;
@@ -468,32 +646,6 @@ namespace DistSSE {
             }
         }
 
-    //    UpdateRequestMessage gen_update_request(std::string op, std::string w, std::string ind, int counter) {
-    //        try {
-    //            std::string enc_token;
-    //            UpdateRequestMessage msg;
-
-    //            std::string kw, tw, l, e;
-    //            // get update time of `w` for `node`
-    //            size_t uc;
-    //            std::string sc;
-    //            uc = get_update_time(w);
-    //            sc = get_search_time(w);
-    //            tw = gen_enc_token(w);
-    //            l = Util::H1(tw + std::to_string(uc + 1));
-    //            e = Util::Xor(op + ind, Util::H2(tw + std::to_string(uc + 1)));
-    //            msg.set_l(l);
-    //            msg.set_e(e);
-    //            msg.set_counter(counter);
-    //            set_update_time(w, uc + 1); // TODO
-    //            return msg;
-    //        }
-    //        catch (const CryptoPP::Exception &e) {
-    //            std::cerr << "in gen_update_request() " << e.what() << std::endl;
-    //            exit(1);
-    //        }
-    //    }
-
         UpdateRequestMessage gen_update_request_rose(string L,string R,string D,string C) {
             try {
                 UpdateRequestMessage msg;
@@ -501,17 +653,23 @@ namespace DistSSE {
                 msg.set_r(R);
                 msg.set_d(D);
                 msg.set_c(C);
-                // print_hex((unsigned char*)L.c_str(),L.length());
-                // printf("\n");
-                // print_hex((unsigned char*)R.c_str(),R.length());
-                // printf("\n");
-                // print_hex((unsigned char*)D.c_str(),D.length());
-                // printf("\n");
-                // print_hex((unsigned char*)C.c_str(),C.length());
                 return msg;
             }
             catch (const CryptoPP::Exception &e) {
                 std::cerr << "in gen_update_request_rose() " << e.what() << std::endl;
+                exit(1);
+            }
+        }
+
+        UpdateRequestMessage_Rose_2 gen_update_request_Rose_2(string L,string C) {
+            try {
+                UpdateRequestMessage_Rose_2 msg;
+                msg.set_l(L);
+                msg.set_c(C);
+                return msg;
+            }
+            catch (const CryptoPP::Exception &e) {
+                std::cerr << "in gen_update_request_Rose_2() " << e.what() << std::endl;
                 exit(1);
             }
         }
@@ -561,8 +719,29 @@ namespace DistSSE {
         //     return "OK";
         // }
 
-        int trapdoor(const string &keyword, string &tpd_L, string &tpd_T, string &cip_L, string &cip_R, string &cip_D, string &cip_C)
-        {
+        search_token trapdoor_Rose_2(string keyword){
+            search_token st;
+            KUPRF kuprf;
+            unsigned char buf_K_u[256];
+            unsigned char buf_delta_k[256];
+            unsigned char buf_tk[256];
+            kuprf.key_gen(buf_K_u);
+
+            kuprf.update_token(buf_delta_k, buf_K_u, (unsigned char*)ST[keyword].K_u.c_str());
+            st.K_u = ST[keyword].K_u;
+            ST[keyword].K_u.assign((const char *)buf_K_u,32);
+            ST[keyword].delta_k.assign((const char *)buf_delta_k,32);
+            
+            PRF_F(buf_tk, K_f, keyword);
+            st.delta_k = ST[keyword].delta_k;
+            st.tk.assign((const char*)buf_tk, 32);
+            st.sn = ST[keyword].sn;
+            st.cnt_d = ST[keyword].cnt_d;
+            st.cnt_i = ST[keyword].cnt_i;
+            return st;
+        }
+
+        int trapdoor(const string &keyword, string &tpd_L, string &tpd_T, string &cip_L, string &cip_R, string &cip_D, string &cip_C){
             string s_R1, s_K1, s_S1,  s_K, s_S;
             int s_id1, ind_0;
             OpType op1;
@@ -636,6 +815,7 @@ namespace DistSSE {
             search(tpd_L, tpd_T, L, R, D, C);
             return "OK";
         }
+        
 
         std::string search(string tpd_L, string tpd_T, string L, string R, string D, string C) {
             // request包含 enc_token 和 st
@@ -665,90 +845,33 @@ namespace DistSSE {
             return "OK";
         }
 
+        std::string search_Rose_2(const std::string w){
+            logger::log(logger::INFO) << "client search_Rose_2(const std::string w):  " << std::endl;
+            search_token st = trapdoor_Rose_2(w);
+            SearchRequestMessage_Rose_2 request;
+            request.set_k_u(st.K_u);
+            request.set_delta_k(st.delta_k);
+            request.set_tk(st.tk);
+            request.set_sn(st.sn);
+            request.set_cnt_d(st.cnt_d);
+            request.set_cnt_i(st.cnt_i);
 
+            ClientContext context;
+            std::unique_ptr <ClientReaderInterface<SearchReply_Rose_2>> reader = stub_->search_Rose_2(&context, request);
+            int counter = 0;
+            SearchReply_Rose_2 reply;
+            std::unordered_set <std::string> result;
+            while (reader->Read(&reply)) {
+                //logger::log(logger::INFO) << reply.ind() << std::endl;
+                counter++;
+                result.insert(reply.c());
+            }
 
+            logger::log(logger::INFO) << " search result counter: " << counter << std::endl;
+            logger::log(logger::INFO) << " search set result: " << result.size() << std::endl;
+            return "OK";
 
-
-//        std::string search_for_trace(const std::string w, int uc) { // only used for trace simulation
-//            std::string kw, tw;
-//            std::string sc = get_search_time(w);
-//            tw = gen_enc_token(w);
-//            if (uc != 0) kw = gen_enc_token(tw + "|" + std::to_string(uc));
-//            else kw = gen_enc_token(tw + "|" + "cache");
-//            search(kw, tw, uc);
-//            // don't need to update sc and uc for trace simulation
-//            // increase_search_time(w);
-//            // set_update_time(w, 0);
-//            return "OK";
-//        }
-
-        // std::string search(const std::string tw, int uc) {
-        //     // request包含 enc_token 和 st
-        //     SearchRequestMessage request;
-        //     //request.set_kw(kw);
-        //     request.set_tw(tw);
-        //     request.set_uc(uc);
-        //     // Context for the client. It could be used to convey extra information to the server and/or tweak certain RPC behaviors.
-        //     ClientContext context;
-        //     // 执行RPC操作，返回类型为 std::unique_ptr<ClientReaderInterface<SearchReply>>
-        //     std::unique_ptr <ClientReaderInterface<SearchReply>> reader = stub_->search(&context, request);
-        //     // 读取返回列表
-        //     int counter = 0;
-        //     SearchReply reply;
-        //     std::unordered_set <std::string> result;
-        //     while (reader->Read(&reply)) {
-        //         logger::log(logger::INFO) << reply.ind() << std::endl;
-        //         counter++;
-        //         result.insert(Util::str2hex(reply.ind()));
-        //     }
-        //     logger::log(logger::INFO) << " search result: " << counter << std::endl;
-        //     logger::log(logger::INFO) << " search set result: " << result.size() << std::endl;
-        //     return "OK";
-        // }
-
-        // std::string search2(const std::string w) {
-        //     logger::log(logger::INFO) << "client search(const std::string w):  " << std::endl;
-        //     std::string tw;
-        //     size_t uc;
-        //     gen_search_token(w, tw, uc);
-        //     std::unordered_set <std::string> result = search2(tw, uc);
-        //     struct timeval t1, t2;
-        //     gettimeofday(&t1, NULL);
-        //     verify(w, result);
-        //     gettimeofday(&t2, NULL);
-        //     double verify_time = ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0;
-        //     logger::log_benchmark() << " verify time (ms): " << verify_time << std::endl;
-        //     logger::log(logger::INFO) << " verify time (ms): " << verify_time << std::endl;
-        //     // update `sc` and `uc`
-        //     //increase_search_time(w);
-        //     //set_update_time(w, 0);
-        //     return "OK";
-        // }
-
-
-        // std::unordered_set <std::string> search2(const std::string tw, int uc) {
-        //     // request包含 enc_token 和 st
-        //     SearchRequestMessage request;
-        //     //request.set_kw(kw);
-        //     request.set_tw(tw);
-        //     request.set_uc(uc);
-        //     // Context for the client. It could be used to convey extra information to the server and/or tweak certain RPC behaviors.
-        //     ClientContext context;
-        //     // 执行RPC操作，返回类型为 std::unique_ptr<ClientReaderInterface<SearchReply>>
-        //     std::unique_ptr <ClientReaderInterface<SearchReply>> reader = stub_->search(&context, request);
-        //     // 读取返回列表
-        //     int counter = 0;
-        //     SearchReply reply;
-        //     std::unordered_set <std::string> result;
-        //     while (reader->Read(&reply)) {
-        //         logger::log(logger::INFO) << reply.ind() << std::endl;
-        //         counter++;
-        //         result.insert(Util::str2hex(reply.ind()));
-        //     }
-        //     logger::log(logger::INFO) << " search result: " << counter << std::endl;
-        //     logger::log(logger::INFO) << " search set result: " << result.size() << std::endl;
-        //     return result;
-        // }
+        }
 
         void verify(const std::string w, std::unordered_set <std::string> result) {
             int ind_len = AES::BLOCKSIZE / 2; // AES::BLOCKSIZE = 16
@@ -763,91 +886,6 @@ namespace DistSSE {
             std::string proof = get_search_time(w);
             logger::log(logger::INFO) << " proof " << proof << std::endl;
         }
-
-//        Status update(UpdateRequestMessage update) {
-//            ClientContext context;
-//            ExecuteStatus exec_status;
-//            // 执行RPC
-//            Status status = stub_->update(&context, update, &exec_status);
-//            // if(status.ok()) increase_update_time(w);
-//            return status;
-//        }
-//
-        // Status update(std::string op, std::string w, std::string ind) {
-        //     logger::log(logger::INFO) << "client update(op, w, ind):  " << std::endl;
-        //     ClientContext context;
-        //     ExecuteStatus exec_status;
-        //     // 执行RPC
-        //     std::string l, e;
-        //     gen_update_token(op, w, ind, l, e); // update(op, w, ind, _l, _e);
-        //     UpdateRequestMessage update_request;
-        //     update_request.set_l(l);
-        //     update_request.set_e(e);
-        //     Status status = stub_->update(&context, update_request, &exec_status);
-        //     // if(status.ok()) increase_update_time(w);
-        //     return status;
-        // }
-
-        // Status batch_update(std::vector <UpdateRequestMessage> update_list) {
-        //     UpdateRequestMessage request;
-        //     ClientContext context;
-        //     ExecuteStatus exec_status;
-        //     std::unique_ptr <ClientWriterInterface<UpdateRequestMessage>> writer(
-        //             stub_->batch_update(&context, &exec_status));
-        //     int i = 0;
-        //     while (i < update_list.size()) {
-        //         writer->Write(update_list[i]);
-        //     }
-        //     writer->WritesDone();
-        //     Status status = writer->Finish();
-        //     return status;
-        // }
-
-
-        // Status batch_update(std::string keyword, size_t N_entries) {
-        //     logger::log(logger::INFO) << "client batch_update(std::string keyword, size_t N_entries)" << std::endl;
-        //     //std::string id_string = std::to_string(thread_id);
-        //     CryptoPP::AutoSeededRandomPool prng;
-        //     int ind_len = AES::BLOCKSIZE / 2; // AES::BLOCKSIZE = 16
-        //     byte tmp[ind_len];
-        //     // for gRPC
-        //     UpdateRequestMessage request;
-        //     ClientContext context;
-        //     ExecuteStatus exec_status;
-        //     std::unique_ptr <ClientWriterInterface<UpdateRequestMessage>> writer(
-        //             stub_->batch_update(&context, &exec_status));
-        //     for (size_t i = 0; i < N_entries; i++) {
-        //         prng.GenerateBlock(tmp, sizeof(tmp));
-        //         std::string ind = /*Util.str2hex*/(std::string((const char *) tmp, ind_len));
-        //         writer->Write(gen_update_request("1", keyword, ind));
-        //     }
-        //     // now tell server we have finished
-        //     writer->WritesDone();
-        //     Status status = writer->Finish();
-        //     if (status.ok()) {
-        //         //set_update_time(keyword, get_update_time(keyword) + N_entries);
-        //         std::string log = "Random DB generation: completed: " + std::to_string(N_entries) + " keyword-filename";
-        //         logger::log(logger::INFO) << log << std::endl;
-        //     }
-        //     return status;
-        // }
-
-//        void test_upload(int wsize, int dsize) {
-//            std::string l, e;
-//            for (int i = 0; i < wsize; i++)
-//                for (int j = 0; j < dsize; j++) {
-//                    gen_update_token("1", std::to_string(i), std::to_string(j), l, e); // update(op, w, ind, _l, _e);
-//                    UpdateRequestMessage update_request;
-//                    update_request.set_l(l);
-//                    update_request.set_e(e);
-//                    // logger::log(logger::INFO) << "client.test_upload(), l:" << l <<std::endl;
-//                    Status s = update(update_request); // TODO
-//                    // if (s.ok()) increase_update_time( std::to_string(i) );
-//
-//                    if ((i * dsize + j) % 1000 == 0)
-//                        logger::log(logger::INFO) << " updating :  " << i * dsize + j << "\r" << std::flush;
-//                }
-//        }
 
     };
 

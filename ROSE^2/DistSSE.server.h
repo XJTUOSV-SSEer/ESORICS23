@@ -13,6 +13,8 @@
 #include "common.h"
 #include "KUPRF.h"
 #include <unordered_set>
+#include <math.h>
+#include <OMAP/OMAP.h>
 #define min(x, y) ( (x) < (y) ? (x) : (y) )
 #define max(x, y) ( (x) < (y) ? (y) : (x) )
 
@@ -27,9 +29,9 @@ using namespace std;
 namespace DistSSE {
     struct Cipher
     {
-    unsigned char R[16];
-    unsigned char D[1 + 32 * 2 + 33];
-    unsigned char C[CIPHER_SIZE];
+        unsigned char R[16];
+        unsigned char D[1 + 32 * 2 + 33];
+        unsigned char C[CIPHER_SIZE];
     };
     class DistSSEServiceImpl final : public RPC::Service {
     private:
@@ -39,8 +41,17 @@ namespace DistSSE {
         int MAX_THREADS;
         static std::mutex result_mtx;
         //static std::mutex cache_write_mtx;
+        int N = 256;
+        bytes<Key> key{0};
+        OMAP* OD_del;
+        OMAP* OD_tree;
+
+
     public:
         DistSSEServiceImpl(const std::string db_path, std::string cache_path, int concurrent) {
+            KUPRF::init();
+            OD_tree = new OMAP(OMAP_SIZE, key);
+            OD_del = new OMAP(OMAP_SIZE, key);
             signal(SIGINT, abort);
             rocksdb::Options options;
             options.create_if_missing = true;
@@ -67,6 +78,7 @@ namespace DistSSE {
             logger::log(logger::INFO) << "abort: " << signum << std::endl;
             exit(signum);
         }
+
         static int store(rocksdb::DB *&db, const std::string l, const std::string e) {
             //logger::log(logger::INFO) << "store: "<< std::endl;
             rocksdb::Status s;
@@ -140,25 +152,6 @@ namespace DistSSE {
             return s.ok();
         }
 
-//
-//        static int merge(rocksdb::DB *&db, const std::string l, const std::string append_str) {
-//            int status = -1;
-//            try {
-//                rocksdb::WriteOptions write_option = rocksdb::WriteOptions();
-//                write_option.sync = true;
-//                rocksdb::Status s;
-//                {
-//                    //std::lock_guard<std::mutex> lock(cache_write_mtx);
-//                    s = db->Delete(write_option, l);
-//                    s = db->Put(write_option, l, append_str);
-//                }
-//                if (s.ok()) status = 0;
-//            } catch (std::exception &e) {
-//                std::cerr << "in append_cache() " << e.what() << std::endl;
-//                exit(1);
-//            }
-//            return status;
-//        }
 
         static int delete_entry(rocksdb::DB *&db, const std::string l) {
             int status = -1;
@@ -195,247 +188,91 @@ namespace DistSSE {
             op = str.substr(0, 1);
             ind = str.substr(1, 7);
         }
-//        static void search_task(std::string kw, int begin, int max, int step, std::set <std::string> *result_set) {
-//            std::string ind, op;
-//            std::string l, e, value;
-//
-//            bool flag = false;
-//            for (int i = begin; i <= max; i += step) {
-//
-//                l = Util::H1(kw + std::to_string(i));
-//                e = get(ss_db, l);
-//                if (e.compare("") == 0) {
-//                    logger::log(logger::ERROR) << "ERROR in search, null str found: " << l << l.length() << std::endl;
-//                    continue;
-//                }
-//
-//                value = Util::Xor(e, Util::H2(kw + std::to_string(i)));
-//
-//                parse(value, op, ind);
-//
-//                {
-//                    std::lock_guard <std::mutex> lock(result_mtx);
-//                    if (op == "1") result_set->insert(value); // TODO
-//                    // else result_set->erase(ind);
-//                    // if (i % 1000 == 0) logger::log(logger::INFO) << "Thread ID: " << threadID << ", searched: " << i << "\n" <<std::flush;
-//                }
-//
-//                //  int s = delete_entry(ss_db, l);
-//            }
-//        }
 
-//
-//        static void search_single(std::string tw, std::string kw, int max, std::unordered_set <std::string> &cache_ID,
-//                                  std::unordered_set <std::string> &update_ID, std::string &cache_string,
-//                                  std::string &update_string) {
-//            std::string l, e, ind, op, value;
-//            // std::string cache_string, update_string;
-//            std::mutex res_mutex;
-//
-//            auto read_cache_job = [&tw, &cache_ID, &cache_string]() {
-//                cache_string = get(cache_db, tw);
-//
-//                //res_mutex.lock();
-//                Util::split(cache_string, '|', cache_ID);//TODO
-//                //res_mutex.unlock();
-//            };
-//
-//            std::thread cache_thread(read_cache_job);
-//
-//            for (int i = 1; i <= max; i++) {
-//
-//                l = Util::H1(kw + std::to_string(i));
-//
-//                e = get(ss_db, l);
-//
-//                if (e.compare("") == 0) {
-//                    logger::log(logger::ERROR) << "we were supporsed to find something!" << std::endl;
-//                    continue;
-//                }
-//
-//                value = Util::Xor(e, Util::H2(kw + std::to_string(i)));
-//
-//                parse(value, op, ind);
-//
-//                if (op == "1") {
-//                    res_mutex.lock();
-//                    update_ID.insert(Util::str2hex(ind));
-//                    res_mutex.unlock();
-//                }
-//
-//                update_string += Util::str2hex(ind) + "|";
-//            }
-//
-//            cache_thread.join();
-//            //merge(cache_db, tw, cache_string + update_string);
-//
-//        }
+        Status search_Rose_2(ServerContext *context, const SearchRequestMessage_Rose_2 *request, ServerWriter <SearchReply_Rose_2> *writer) {
+            logger::log(logger::INFO) << "search_Rose_2(ServerContext *context, const SearchRequestMessage_Rose_2 *request, ServerWriter <SearchReply_Rose_2> *writer)"<< std::endl;
+            string K_u = request->k_u();
+            string delta_k = request->delta_k();
+            string tk = request->tk();
+            int sn = request->sn();
+            int cnt_d = request->cnt_d();
+            int cnt_i = request->cnt_i();
+            queue<pair<int,int>> T;
+            vector<string> R;
+            T.push(make_pair(sn,cnt_d));
+            KUPRF kuprf;
+            unsigned char buf_L[256];
+            string C;
+            string L;
+            while(T.size() != 0){
+                int n = T.front().first;
+                int num = T.front().second;
+                T.pop();
+                if(n <= N){
+                    num = 1;
+                }
+                kuprf.Eval(buf_L,(unsigned char*)K_u.c_str(),Util::H1(tk+std::to_string(n)+std::to_string(num)));
+                L.assign((char*)buf_L,33);
+                if(get(ss_db,L,C) == false){
+                    int h = get_h(n);
+                    int lln = 2*N + pow(2,h-1)*(n-1) - pow(2,h)*N + 1;
+                    int rln = lln + pow(2,h-1) - 1;
+                    if(cnt_i < rln){
+                        rln = cnt_i;
+                    }
+                    for(int k=lln; k<=rln; k++){
+                        T.push(make_pair(k,0));
+                    }
+                    continue;
+                }
+                kuprf.update(buf_L, (unsigned char*)delta_k.c_str(), (unsigned char*)L.c_str());
+                L.assign((char*)buf_L,33);
+                delete_entry(ss_db,L);
+                if(n <= N){
+                    R.push_back(C);
+                }else{
+                    string I_n = Util::Xor(Util::H1(tk + to_string(n) + to_string(num)),C);
+                    vector<int> I_n_v;
+                    int index1 = 0;
+                    int index2 = 0;
+                    int lNode = 0;
+                    int lNum = 0;
+                    int rNode = 0;
+                    int rNum = 0;
+                    for(index2=0;index2<I_n.length();index2++){
+                        if(I_n[index2] == '*'){
+                            I_n_v.push_back(atoi(I_n.substr(index1,index2 - index1).c_str()));
+                            index1 = index2 + 1;
+                        }
+                        if(I_n[index2] == '#'){
+                            break;
+                        }
+                    }
+                    lNode = I_n_v[0];
+                    lNum = I_n_v[1];
+                    rNode = I_n_v[2];
+                    rNum = I_n_v[3];
+                    T.push(make_pair(lNode,lNum));
+                    int rNode_h = get_h(rNode);
+                    int rNode_lln = 2*N + pow(2,rNode_h-1)*(rNode-1) - pow(2,rNode_h) + 1; 
+                    if(rNode_lln <= cnt_i){
+                        T.push(make_pair(rNode,rNum));
+                    }
+                }
+            }
+            SearchReply_Rose_2 reply;
+            for (std::vector<std::string>::iterator i = R.begin(); i != R.end(); i++) {
+                reply.set_c(*i);
+                writer->Write(reply);
+            }
+            return Status::OK;
+        }
 
-//        static void merge(std::set <std::string> &searchResult, std::string &merge_string) {
-//            for (auto &t : searchResult) {
-//                merge_string += Util::str2hex(t) + "|";
-//            }
-//        }
-
-//        void search_parallel_simple(std::string kw, std::string tw, int uc, int fetch_threads,
-//                                    std::unordered_set <std::string> &cache_ID,
-//                                    std::unordered_set <std::string> &result, std::string &cache_string,
-//                                    std::string &result_string) {
-//            std::mutex res_mutex;
-//            auto fetch_job = [&kw, &tw, &res_mutex, &result, &result_string](int begin, int max, int step) {
-//                for (int i = begin; i <= max; i += step) {
-//                    std::string st_c_ = tw + "|" + std::to_string(i);
-//                    //if (uc != 0) kw = gen_enc_token(w + "|" + std::to_string(uc));
-//                    std::string u = Util::H1(st_c_);
-//                    std::string e;
-//                    bool found = get(ss_db, u, e);
-//                    if (found) {
-//                        std::string value = Util::Xor(e, Util::H2(st_c_));
-//                        std::string op, ind;
-//                        parse(value, op, ind);
-//
-//                        if (step > 1) res_mutex.lock();
-//                        result.insert(Util::str2hex(ind));
-//                        result_string += Util::str2hex(ind) + "|";
-//                        if (step > 1) res_mutex.unlock();
-//                    } else {
-//                        logger::log(logger::ERROR) << "We were supposed to find something!" << std::endl;
-//                    }
-//                }
-//            };
-//
-//            get(cache_db, tw, cache_string);
-//            //	Util::split(cache_string, '|', cache_ID);
-//            std::vector <std::thread> threads;
-//
-//            for (int i = 1; i <= fetch_threads; i++) { // counter begin from 1 !
-//                threads.push_back(std::thread(fetch_job, i, uc, fetch_threads));
-//            }
-//
-//            for (auto &t : threads) {
-//                t.join();
-//            }
-//
-//        }
-
-//        void search_parallel(std::string kw, std::string tw, int uc, int decrypt_threads,
-//                             std::unordered_set <std::string> &cache_ID, std::unordered_set <std::string> &result,
-//                             std::string &cache_string, std::string &result_string) {
-//            // std::set<std::string> result;
-//            //std::string cache_string, result_string;
-//
-//            std::mutex res_mutex;
-//
-//            ThreadPool decrypt_pool(decrypt_threads);
-//
-//            static double time = 0.0;
-//
-//            auto read_cache_job = [&tw, &cache_ID, &res_mutex, &cache_string]() {
-//                cache_string = get(cache_db, tw);
-//
-//                //res_mutex.lock();
-//                Util::split(cache_string, '|', cache_ID); //TODO
-//                //res_mutex.unlock();
-//            };
-//
-//            auto decrypt_job = [&result_string, &result, &res_mutex, &decrypt_threads](const std::string st_c_,
-//                                                                                       const std::string e) {
-//
-//                std::string value = Util::Xor(e, Util::H2(st_c_));
-//                std::string op, ind;
-//                parse(value, op, ind);
-//
-//                if (decrypt_threads > 1) res_mutex.lock();
-//                result.insert(Util::str2hex(ind));
-//                result_string += Util::str2hex(ind) + "|";
-//                if (decrypt_threads > 1) res_mutex.unlock();
-//            };
-//
-//            auto fetch_job = [&kw, &tw, &decrypt_job, &decrypt_pool](const int begin, const int max, const int step) {
-//
-//                for (int i = begin; i <= max; i += step) {
-//
-//                    std::string st_c_ = kw + std::to_string(i);
-//                    std::string u = Util::H1(st_c_);
-//                    std::string e;
-//
-//                    bool found = get(ss_db, u, e);
-//
-//                    if (found) {
-//                        decrypt_pool.enqueue(decrypt_job, st_c_, e);
-//                    } else {
-//                        logger::log(logger::ERROR) << "We were supposed to find something!" << std::endl;
-//                    }
-//                }
-//
-//            };
-//
-//            std::vector <std::thread> threads;
-//
-//            unsigned n_threads = MAX_THREADS - decrypt_threads;
-//
-//            threads.push_back(std::thread(read_cache_job));
-//
-//            for (int i = 1; i <= n_threads; i++) { // counter begin from 1 !
-//                threads.push_back(std::thread(fetch_job, i, uc, n_threads));
-//            }
-//
-//            for (auto &t : threads) {
-//                t.join();
-//            }
-//
-//            decrypt_pool.join();
-//
-//            //merge(cache_db, tw, cache_string + result_string);
-//            // return result;
-//        }
-
-
-//        void search(std::string kw, std::string tw, int uc, std::set <std::string> &ID) {
-//            std::vector <std::string> op_ind;
-//            std::string ind, op;
-//            std::string l, e, value;
-//            std::string cache_ind;
-//            int counter = 0;
-//            struct timeval t1, t2;
-//            double search_time;
-//            try {
-//                gettimeofday(&t1, NULL);
-//                std::string merge_string = get(cache_db, tw);
-//                // Util::split(merge_string, '|', ID); // get all cached inds
-//                gettimeofday(&t2, NULL);
-//                //std::string merge_string = cache_ind;
-//                if (kw != "") {
-//                    {
-//                        std::vector <std::thread> threads;
-//                        for (int i = 1; i <= MAX_THREADS; i++) {
-//                            threads.push_back(std::thread(search_task, kw, i, uc, MAX_THREADS, &ID));
-//                        }
-//                        // join theads
-//                        for (auto &t : threads) {
-//                            t.join();
-//                        }
-//                        gettimeofday(&t2, NULL);
-//                        merge(ID, merge_string);
-//                    }
-//                    // merge to cache can be done by a seperate thread backgroud, the result can be returned before.
-//                    // so we don't count the time...
-//                }
-//
-//                //gettimeofday(&t2, NULL);
-//
-//                if (merge_string != "") {
-//                    int s = merge(cache_db, tw, merge_string);
-//                    assert(s == 0);
-//                }
-//                search_time = ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0;
-//                search_log(kw, search_time, ID.size());
-//            } catch (const std::exception &e) {
-//                std::cerr << "in Search() " << e.what() << std::endl;
-//                exit(1);
-//            }
-//        }
-
+        int get_h(int n){
+            int h;
+            h = ceil(1+log(N)/log(2)-log(2*N-n)/log(2));
+            return h;
+        }
 
         // server RPC
         // search() 实现搜索操作
@@ -614,7 +451,7 @@ namespace DistSSE {
                     }
                     for (auto itr = D.begin(); itr != D.end(); itr++)
                     {
-                        kuprf.update(buf1, buf3 + 1, (const unsigned char *) itr->c_str());//<<<<<
+                        kuprf.update(buf1, buf3 + 1, (const unsigned char *) itr->c_str());//
                         itr->assign((const char *) buf1, 33);
                     }
                 }
@@ -696,22 +533,61 @@ namespace DistSSE {
             return Status::OK;
         }
 
-//        // batch_cache(), only used for expriment simulation
-//        Status batch_cache(ServerContext *context, ServerReader <CacheRequestMessage> *reader, ExecuteStatus *response) {
-//            std::string tw;
-//            std::string inds;
-//
-//            CacheRequestMessage request;
-//            while (reader->Read(&request)) {
-//                tw = request.tw();
-//                inds = request.inds();
-//                int s = merge(cache_db, tw, inds);
-//                assert(s == 0);
-//            }
-//
-//            response->set_status(true);
-//            return Status::OK;
-//        }
+        // update()实现单次更新操作
+        Status update_Rose_2(ServerContext *context, const UpdateRequestMessage_Rose_2 *request, ExecuteStatus *response) {
+            std::string l = request->l();
+            std::string c = request->c();
+            logger::log(logger::INFO) << "server update_Rose_2(ServerContext *context, const UpdateRequestMessage_Rose_2 *request, ExecuteStatus *response): "<< std::endl;
+            int status = store(ss_db, l, c);
+            //assert(status == 0);
+            if (status != 0) {
+                response->set_status(false);
+                return Status::CANCELLED;
+            }
+            response->set_status(true);
+            return Status::OK;
+        }
+
+        Status OMAPInsert(ServerContext *context, const OMAPInsertMessage *request, ExecuteStatus *response) {
+            logger::log(logger::INFO) << "OMAPInsert(ServerContext *context, const OMAPInsertMessage *request, ExecuteStatus *response)"<< std::endl;
+            std::string w = request->w();
+            std::string idorn = request->idorn();
+            std::string value = request->value();
+            Bid key_OD = getBid(w + "#" + idorn);
+            if(request->flag() == 0){
+                //OD_del
+                OD_del->insert(key_OD,value);
+            }else{
+                //OD_tree
+                OD_tree->insert(key_OD,value);
+            }
+
+            //assert(status == 0);
+            if (status != 0) {
+                response->set_status(false);
+                return Status::CANCELLED;
+            }
+            response->set_status(true);
+            return Status::OK;
+        }
+
+        Status OMAPFind(ServerContext *context, const OMAPFindMessage *request, OMAPFindReply* reply){
+            logger::log(logger::INFO) << "OMAPFind(ServerContext *context, const OMAPFindMessage *request, OMAPFindReply* reply)"<< std::endl;
+            std::string w = request->w();
+            std::string idorn = request->idorn();
+            Bid key_OD = getBid(w + "#" + idorn);
+            if(request->flag() == 0){
+                //OD_del
+                string value = OD_del->find(key_OD);
+            }else{
+                //OD_tree
+                string value = OD_tree->find(key_OD);
+            }
+            OMAPFindReply reply;
+            reply.set_value(value);
+            return Status::OK;
+        }
+
 
     };
 

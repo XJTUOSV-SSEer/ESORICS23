@@ -23,13 +23,15 @@ public:
     int key_gen(unsigned char *key_out);
 
     int Eval(unsigned char *out, const unsigned char *key, const std::string &keyword,
-             const int id, OpType op);
+             const int id, OpType op); //out : P()
+    
+    int Eval(unsigned char *out, const unsigned char *key, const std::string &data);
 
-    int update_token(unsigned char *out, const unsigned char *K1, const unsigned char *K2);
+    int update_token(unsigned char *out, const unsigned char *K1, const unsigned char *K2);//out : delta_k,其中K1是新的K
 
-    int update(unsigned char *out, const unsigned char *data, const unsigned char *key);
+    int update(unsigned char *out, const unsigned char *token, const unsigned char *data);//out : new P, token : delta, data : old_P
 
-    int mul(unsigned char *out, const unsigned char *K1, const unsigned char *K2);
+    int mul(unsigned char *out, const unsigned char *K1, const unsigned char *K2);//传递
 
     static void init();
 

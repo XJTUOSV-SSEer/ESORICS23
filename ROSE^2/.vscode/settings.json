@@ -81,6 +81,22 @@
         "ios": "cpp",
         "locale": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
-    }
+        "stack": "cpp",
+        "codecvt": "cpp",
+        "filesystem": "cpp",
+        "bit": "cpp",
+        "__functional_03": "cpp",
+        "regex": "cpp",
+        "variant": "cpp",
+        "__memory": "cpp",
+        "scoped_allocator": "cpp",
+        "csetjmp": "cpp",
+        "any": "cpp",
+        "cuchar": "cpp",
+        "forward_list": "cpp",
+        "shared_mutex": "cpp",
+        "valarray": "cpp",
+        "charconv": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

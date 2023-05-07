@@ -12,36 +12,68 @@ rpc setup (SetupRequestMessage) returns ( ExecuteStatus ) {}
 // Search
 rpc search(SearchRequestMessage) returns (stream SearchReply) {}
 rpc search_rose(SearchRequestMessage) returns (stream SearchReply) {}
-rpc search_rose2(SearchRequestMessage_rose_2) returns (stream SearchReply_rose_2){}
+rpc search_Rose_2(SearchRequestMessage_Rose_2) returns (stream SearchReply_Rose_2){}
 
 // Update
 rpc update (UpdateRequestMessage) returns ( ExecuteStatus ) {}
-rpc update_rose_2(UpdateRequestMessage_rose_2) returns (ExecuteStatus){}
+rpc update_Rose_2(UpdateRequestMessage_Rose_2) returns (ExecuteStatus){}
 
 rpc batch_update (stream UpdateRequestMessage) returns ( ExecuteStatus ) {}
 rpc batch_update_rose (stream UpdateRequestMessage) returns ( ExecuteStatus ) {}
-rpc batch_update_rose_2 (stream UpdateRequestMessage_rose_2) returns(ExecuteStatus){}
+rpc batch_update_Rose_2 (stream UpdateRequestMessage_Rose_2) returns(ExecuteStatus){}
 
 // only used for experiment simulation
 rpc cache (CacheRequestMessage) returns ( ExecuteStatus ) {}
 rpc batch_cache (stream CacheRequestMessage) returns ( ExecuteStatus ) {}
 
+//getOMAP
+rpc OMAPFind(OMAPFindMessage) returns (OMAPFindReply){}
+rpc OMAPInsert(OMAPInsertMessage) returns (ExecuteStatus){}
+rpc batchOMAPFind(batchOMAPFindMessage) returns (batchOMAPFindReply){}
+rpc batchOMAPInsert(stream OMAPInsertMessage) returns (ExecuteStatus){}
+
 }
 
-message UpdateRequestMessage_rose_2{
+message batchOMAPFindMessage{
+    bytes w = 1;
+    repeated bytes idorn = 2;
+    uint32 flag = 3;
+}
+message batchOMAPFindReply{
+    repeated bytes value = 1;
+}
+
+message OMAPFindMessage{
+    bytes w = 1;
+    bytes idorn = 2;
+    uint32 flag = 3; // 0 for OD_del, 1 for OD_tree
+}
+message OMAPFindReply{
+    bytes value = 1; 
+}
+message OMAPInsertMessage{
+    bytes w = 1;
+    bytes idorn = 2;
+    uint32 flag = 3; // 0 for OD_del, 1 for OD_tree
+    bytes value = 4;
+}
+
+
+message UpdateRequestMessage_Rose_2{
     bytes L = 1;
     bytes C = 2;
 }
 
-message SearchRequestMessage_rose_2{
+message SearchRequestMessage_Rose_2{
     bytes K_u = 1;
     bytes delta_k = 2;
     bytes tk = 3;
     uint32 sn = 4;
     uint32 cnt_d = 5;
+    uint32 cnt_i = 6;
 }
 
-message SearchReply_rose_2{
+message SearchReply_Rose_2{
 	bytes C = 1;
 }
 
@@ -50,13 +82,6 @@ message SetupRequestMessage
     uint64 setup_size = 1;
     // bytes public_key = 2;
 }
-
-// message SearchRequestMessage
-// {
-//     //bytes kw = 1;
-//     bytes tw = 2;
-// 	uint64 uc = 3; // update after last search
-// }
 
 message SearchRequestMessage{
     bytes tpd_L = 1;
@@ -78,13 +103,6 @@ message CacheRequestMessage
     bytes tw = 1;
     bytes inds = 2;
 }
-
-// message UpdateRequestMessage
-// {
-//     bytes l = 1;
-//     bytes e = 2;
-// 	//uint64 counter = 3;
-// }
 
 //rose
 message UpdateRequestMessage
