@@ -10,39 +10,8 @@ int main(int argc, char **argv) {
     //DistSSE::logger::log(DistSSE::logger::INFO) << " client test :  "<< std::endl;
     //DistSSE::logger::log_benchmark() << "client to file" <<std::endl;
     // Instantiate the client and channel isn't authenticated
-    DistSSE::Client client(grpc::CreateChannel("0.0.0.0:50051", grpc::InsecureChannelCredentials()),
+    DistSSE::Client client(grpc::CreateChannel("192.168.1.98:50051", grpc::InsecureChannelCredentials()),
                            std::string(argv[1]));
-
-    //std::string Hw = DistSSE::Util::hex2str("00000000000000000000000000000000");
-    //std::cerr <<DistSSE::Util::str2hex(Hw) << std::endl;
-    //CryptoPP::AutoSeededRandomPool prng;
-    //int ind_len = AES::BLOCKSIZE / 2; // AES::BLOCKSIZE = 16
-
-    //    byte tmp[ind_len];
-    //    prng.GenerateBlock(tmp, sizeof(tmp));
-    //    std::string s1 = std::string((const char *) tmp, ind_len);
-    //    std::cerr << s1 << std::endl;
-    //
-    //    byte tmp2[ind_len] = {0};
-    //    std::string s2 = std::string((const char *) tmp2, ind_len);
-    //    std::cerr << s2 << std::endl;
-    //
-    //    std::cerr << DistSSE::Util::Xor(s1, s2) << std::endl;
-
-
-    // if (argc == 3) {
-    //     int type = atoi(argv[2]);
-    //     if (type == 1) {
-    //         client.update("1", "keyword", "ind");
-    //     } else if (type == 2) {
-    //         client.batch_update("keyword", 3);
-    //     } else if (type == 3) {
-    //         client.search("keyword");
-    //     } else {
-    //         client.search2("keyword");
-    //     }
-    //     return 0;
-    // }
 
     //数据库生成
     int flag = atoi(argv[2]);
@@ -51,7 +20,7 @@ int main(int argc, char **argv) {
         //数据库生成
         std::string logFileName = argv[4]; //设置日志文件名
         DistSSE::logger::set_benchmark_file(logFileName); //初始化日志文件
-        vector<string> serverEDB = client.load_data_from_file("sse_data_test");
+        vector<string> serverEDB = client.load_data_from_file("./dataset/sse_data_test");
         DistSSE::gen_db_rose(client,serverEDB,threads_num);
         std::cout << "update done." << std::endl;
     }else if(argc == 6 && flag == 3){

@@ -1,24 +1,7 @@
 import hashlib
 
 word_freq = {
-    "2001": 24,
-    "pst": 21,
-    "2000": 20,
-    "call": 10,
-    "thu": 93,
-    "question": 83,
-    "follow": 75,
-    "regard": 68,
-    "contact": 60,
-    "energi": 54,
-    "current": 47,
-    "legal": 39,
-    "problem": 31,
-    "industri": 21,
-    "transport": 12,
-    "target": 7,
-    "exactli": 4,
-    "enterpris": 3
+    "2001": 100000
 }
 
 with open("sse_data_test", "w") as f:
