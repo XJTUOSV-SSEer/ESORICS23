@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <set>
+#include "Bid.h"
 
 
 class Utilities {
@@ -35,7 +36,8 @@ public:
     static std::array<uint8_t, 16> convertToArray(std::string value);
     static int getMem();
     static double getTimeFromHist(int id);
-    static int getBid(std::string srchIndex);
+    //static int getBid(std::string srchIndex);
+    static Bid getBid(string input);
     static std::array<uint8_t, 16> encode(std::string keyword);
     static std::array<uint8_t, 16> encode(std::string keyword, unsigned char* curkey);
     static std::array<uint8_t, 16> encode(unsigned char* plaintext, unsigned char* curkey = NULL);

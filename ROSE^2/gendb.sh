@@ -1,0 +1,1 @@
+./rpc_client ./database/my.cdb 1 1 benchmark_client_rose_gen_db.out

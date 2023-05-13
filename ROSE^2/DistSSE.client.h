@@ -66,7 +66,7 @@ namespace DistSSE {
         std::map<std::string,int> LastId;
         std::map<std::string, std::string> LastK, LastS, LastR;
         std::map<std::string, OpType> LastOp;
-        int N = 256;
+        int N = 131072; //2^17
     
 
         int Enc_id(std::string &C_out, const int id)
@@ -207,14 +207,16 @@ namespace DistSSE {
         //计算sn
         int getSn_Rose_2(int cnt_i){
             int Sn = 0;
-            int j = ceil(log(cnt_i)/log(2));
+            int j = ceil(log2(cnt_i));
             Sn = ceil(cnt_i * 1.0 / pow(2,j)) + N/pow(2,j-1)*(pow(2,j)-1);
             return Sn;
         }
         std::vector<int> get_internal_nodes_Rose_2(int cnt_i){
+            //cout<<cnt_i<<endl;
             std::vector<int> res;
-            for(int j=1;j<=ceil(log(cnt_i)/log(2));j++){
+            for(int j=log2(N);j>=1;j--){
                 res.push_back(ceil(cnt_i * 1.0 / pow(2,j)) + N / pow(2,j-1) * (pow(2,j)-1));
+                //cout<<ceil(cnt_i * 1.0 / pow(2,j)) + N / pow(2,j-1) * (pow(2,j)-1)<<endl;
             }
             return res;
         }
@@ -259,8 +261,6 @@ namespace DistSSE {
             int sn;
             std::string L;
             std::string C;
-            ExecuteStatus exec_status;
-            ClientContext context;
             OMAPFindMessage findMessage;
             OMAPFindReply findReply;
             OMAPInsertMessage insertMessage;
@@ -270,7 +270,8 @@ namespace DistSSE {
                 //     return -1;
                 // }
                 findMessage = gen_findMessage(w,id,0);
-                stub_->OMAPFind(&context,&findMessage,&findReply);
+                ClientContext context;
+                stub_->OMAPFind(&context,findMessage,&findReply);
                 if(findReply.value() != ""){
                     return -1;
                 }
@@ -291,7 +292,9 @@ namespace DistSSE {
                 cnt_i++;
                 //OD_del[make_pair(w,id)] = cnt_i;
                 insertMessage = gen_insertMessage(w,id,0,std::to_string(cnt_i));
-                stub_->OMAPInsert(&context,&insertMessage,&exec_status);
+                ClientContext context1;
+                ExecuteStatus exec_status;
+                stub_->OMAPInsert(&context1,insertMessage,&exec_status);
                 sn = getSn_Rose_2(cnt_i);
                 ST[w].K_u = K_u;
                 ST[w].delta_k = delta_k;
@@ -302,107 +305,149 @@ namespace DistSSE {
                 PRF_F(buf_PRF, K_f, w);
                 PRF.assign((char*) buf_PRF, 32);
                 kuprf.Eval(buf_kuprf, (unsigned char*)K_u.c_str(), Util::H1(PRF+std::to_string(cnt_i)+"1"));
-                L.assign((char*) buf_kuprf,33);
+                L.assign((char*) buf_kuprf, 33);
+                //print_hex((unsigned char*)L.c_str(),L.length());
                 C = Util::Enc(K_s,16,id);
+                //send to server
+                ClientContext context3;
+                UpdateRequestMessage_Rose_2 request;
+                request.set_l(L);
+                request.set_c(C);
+                stub_->update_Rose_2(&context3,request,&exec_status);
             }
             //del
             else if(op == 0){
                 findMessage = gen_findMessage(w,id,0);
-                stub_->OMAPFind(&context,&findMessage,&findReply);
-                if(reply.value() == ""){
+                ClientContext context;
+                stub_->OMAPFind(&context,findMessage,&findReply);
+                if(findReply.value() == ""){
                     return -1;
                 }
                 // if(OD_del.find(make_pair(w,id)) == OD_del.end()){
                 //     return -1;
                 // }
-                vector<I_n> Ins;
                 K_u = ST[w].K_u;
                 delta_k = ST[w].delta_k;
                 cnt_i = ST[w].cnt_i;
                 cnt_d = ST[w].cnt_d;
                 sn = ST[w].sn;
+
                 cnt_d++;
-                std::vector<int> N = get_internal_nodes_Rose_2(cnt_i);
+                cnt_i = atoi(findReply.value().c_str());
+                std::vector<int> NN = get_internal_nodes_Rose_2(cnt_i);
                 //batchFind N;
                 batchOMAPFindMessage batchFindRequest;
-                for(int i=0;i<N.size();i++){
+                for(int i=0;i<NN.size();i++){
                     batchFindRequest.set_w(w);
-                    batchFindRequest.add_idorn(to_string(N[i]));
-                    batchFindRequest->set_flag(1);
+                    batchFindRequest.add_idorn(to_string(NN[i]));
+                    batchFindRequest.set_flag(1);
                 }
+
                 // 读取返回列表
                 batchOMAPFindReply batchFindReply;
-                stub_->batchOMAPFind(&context,&batchFindRequest,&batchFindReply);
+                ClientContext context1;
+                stub_->batchOMAPFind(&context1,batchFindRequest,&batchFindReply);
+                vector<I_n> Ins;
                 for(int i=0;i<batchFindReply.value_size();i++){
                     I_n In;
                     if(batchFindReply.value(i) == ""){
-                        In.Node = N[i];
+                        In.Node = NN[i];
                         In.Num = 0;
                         In.lNum = 0;
                         In.rNum = 0;
-                        if(i == N.size()-1){
+                        if(i == NN.size()-1){
                             //如果是最后一个，那么左右子节点是叶子节点
                             In.lNode = cnt_i % 2 == 0?cnt_i - 1:cnt_i;
-                            In.rNode = cnt_i % 2 == 0?cnt_i:cnt_i - 1;
+                            In.rNode = cnt_i % 2 == 0?cnt_i:cnt_i + 1;
                         }else{
-                            In.lNode = N[i+1] % 2 == 0?N[i+1] - 1:N[i+1];
-                            In.rNode = N[i+1] % 2 == 0?N[i+1]:N[i+1] - 1;
+                            In.lNode = NN[i+1] % 2 == 0?NN[i+1] - 1:NN[i+1];
+                            In.rNode = NN[i+1] % 2 == 0?NN[i+1]:NN[i+1] + 1;
                         }
                     }else{
                         In = StringToIn(batchFindReply.value(i));
                     }
-                    if(In.Node != -1){
+                    if(In.Num != -1){
                         Ins.push_back(In);
                     }
                 }
                 
                 //TODO：需要更多的边界讨论，例如Ins.size()>=2
-                I_n p = Ins[Ins.size()-1];
-                I_n gp = Ins[Ins.size()-2];
+                I_n* p = &Ins[Ins.size()-1];
+                I_n* gp = &Ins[Ins.size()-2];
                 I_n sib;
-                if(p.lNode == cnt_i){
-                    sib = Ins[p.rNode];
+                if(p->lNode == cnt_i){
+                    sib.Node = p->rNode;
+                    if(p->rNode <= N){
+                        sib.Num = 0;
+                    }else{
+                        sib.Num = p->rNum;
+                    }
                 }else{
-                    sib = Ins[p.lNode];
+                    sib.Node = p->lNode;
+                    if(p->lNode <= N){
+                        sib.Num = 0;
+                    }else{
+                        sib.Num = p->lNum;
+                    }
                 }
-                if(gp.Node > sn){
-                    sn = gp.Node;
+
+                if(gp->Node > sn){
+                    sn = gp->Node;
                 }
+
                 ST[w].cnt_d = cnt_d;
                 ST[w].sn = sn;
-                if(gp.lNode == p.Node){
-                    gp.lNode = sib.Node;
-                    gp.lNum = sib.Num;
+
+                if(gp->lNode == p->Node){
+                    gp->lNode = sib.Node;
+                    gp->lNum = sib.Num;
                 }else{
-                    gp.rNode = sib.Node;
-                    gp.lNum = sib.Num;
+                    gp->rNode = sib.Node;
+                    gp->lNum = sib.Num;
                 }
+                p = nullptr;
+                gp = nullptr;
+
                 //这里删除那个父节点p，即置-1
-                Ins[Ins.size()-1].Node = -1;
+                Ins[Ins.size()-1].Num = -1;
                 //将In重新写入OD_tree
-                std::unique_ptr <ClientWriterInterface<OMAPInsertMessage>> writer(stub_->batchOMAPInsert(&context, &exec_status));
+                ClientContext context2;
+                ClientContext context3;
+                ExecuteStatus exec_status1;
+                ExecuteStatus exec_status2;
+                std::unique_ptr <ClientWriterInterface<OMAPInsertMessage>> writer(stub_->batchOMAPInsert(&context2, &exec_status1));
+                std::unique_ptr <ClientWriterInterface<UpdateRequestMessage_Rose_2>> writer2(stub_->batch_update_Rose_2(&context3, &exec_status2));
                 for(int i=0;i<Ins.size()-1;i++){
                     if(Ins[i].lNode == Ins[i+1].Node){
                         Ins[i].lNum++;
-                    }else{
+                    }else if(Ins[i].rNode == Ins[i+1].Node){
+                        //这里的if中有可能会是叶子节点，所以不能直接else
                         Ins[i].rNum++;
                     }
                     Ins[i].Num++;
                     //OD_tree[make_pair(w,Ins[i].Node)] = Ins[i];
-                    writer->Write(InToString(Ins[i]));
+                    writer->Write(gen_insertMessage(w,to_string(Ins[i].Node),1,InToString(Ins[i])));
+                    // cout<<"发送n:"<<Ins[i].Node<<endl;
+                    // cout<<"value:"<<InToString(Ins[i])<<endl;
+                    // cout<<"num:"<<Ins[i].Num<<endl;
                     PRF_F(buf_PRF, K_f, w);
                     PRF.assign((char*) buf_PRF, 32);
                     kuprf.Eval(buf_kuprf, (unsigned char*)K_u.c_str(), Util::H1(PRF + std::to_string(Ins[i].Node) + std::to_string(Ins[i].Num)));
-                    L.assign((char*) buf_kuprf,33);
+                    //print_hex((unsigned char*)K_u.c_str(),K_u.length());
+                    L.assign((char*) buf_kuprf, 33);
+                    //print_hex((unsigned char*)L.c_str(),L.length());
                     C = encrypt_Rose_2(Util::H1(PRF + std::to_string(Ins[i].Node) + std::to_string(Ins[i].Num))
                                         ,Ins[i].lNode,Ins[i].lNum,Ins[i].rNode,Ins[i].rNum);
+                    //send to server
+                    UpdateRequestMessage_Rose_2 request = gen_update_request_Rose_2(L,C);
+                    writer2->Write(request);
                 }
-                writer->Write(InToString(Ins[Ins.size()-1]));//这是最后一个被删除的（置-1的）
+                writer2->WritesDone();
+                writer2->Finish();
+                writer->Write(gen_insertMessage(w,to_string(Ins[Ins.size()-1].Node),1,InToString(Ins[Ins.size()-1])));//这是最后一个被删除的（置-1的）
                 writer->WritesDone();
+                writer->Finish();
             }
-            //send to server
-            UpdateRequestMessage_Rose_2 request = gen_update_request_Rose_2(L,C);
-            Status status = stub_->update_Rose_2(&context, request ,&exec_status);
             return 0;
         }
 
@@ -416,18 +461,19 @@ namespace DistSSE {
             return res;
         }
 
-        string InToString(int Node,int Num, int lNode, int lNum, int rNode, int rNum){
+        string InToString(I_n In){
             string res;
-            res = to_string(Node) + "*" + to_string(Num) + "*" +to_string(lNode) + "*" + to_string(lNum) + "*" + to_string(rNode) + "*" + to_string(rNum);
+            res = to_string(In.Node) + "*" + to_string(In.Num) + "*" +to_string(In.lNode) + "*" + to_string(In.lNum) + "*" + to_string(In.rNode) + "*" + to_string(In.rNum) + "*";
             return res;
         }
 
         I_n StringToIn(string InString){
             I_n In;
             vector<int> res;
-            int index1,index2 = 0;
+            int index1 = 0;
+            int index2 = 0;
             for(;index2<InString.length();index2++){
-                if(index2 == '*'){
+                if(InString[index2] == '*'){
                     res.push_back(atoi(InString.substr(index1,index2-index1).c_str()));
                     index1 = index2 + 1;
                 }
@@ -674,22 +720,6 @@ namespace DistSSE {
             }
         }
 
-//        // only used for simulation ...
-//        CacheRequestMessage gen_cache_request(std::string keyword, std::string inds) {
-//            try {
-//                CacheRequestMessage msg;
-//                std::string tw = gen_enc_token(keyword + "|" + std::to_string(-1));
-//                msg.set_tw(tw);
-//                msg.set_inds(inds);
-//
-//                return msg;
-//            }
-//            catch (const CryptoPP::Exception &e) {
-//                std::cerr << "in gen_cache_request() " << e.what() << std::endl;
-//                exit(1);
-//            }
-//        }
-
         void gen_search_token(std::string w, std::string &tw, size_t &uc) {
             try {
                 std::string sc;
@@ -704,21 +734,6 @@ namespace DistSSE {
             }
         }
 
-
-        // 客户端RPC通信部分
-
-        // std::string search(const std::string w) {
-        //     logger::log(logger::INFO) << "client search(const std::string w):  " << std::endl;
-        //     std::string tw;
-        //     size_t uc;
-        //     gen_search_token(w, tw, uc);
-        //     search(tw, uc);
-        //     // update `sc` and `uc`
-        //     //increase_search_time(w);
-        //     //set_update_time(w, 0);
-        //     return "OK";
-        // }
-
         search_token trapdoor_Rose_2(string keyword){
             search_token st;
             KUPRF kuprf;
@@ -726,8 +741,7 @@ namespace DistSSE {
             unsigned char buf_delta_k[256];
             unsigned char buf_tk[256];
             kuprf.key_gen(buf_K_u);
-
-            kuprf.update_token(buf_delta_k, buf_K_u, (unsigned char*)ST[keyword].K_u.c_str());
+            kuprf.update_token(buf_delta_k, (unsigned char*)ST[keyword].K_u.c_str(), buf_K_u);
             st.K_u = ST[keyword].K_u;
             ST[keyword].K_u.assign((const char *)buf_K_u,32);
             ST[keyword].delta_k.assign((const char *)buf_delta_k,32);

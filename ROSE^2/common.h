@@ -8,7 +8,7 @@
 #define CIPHER_SIZE (16 + 16)
 #define OMAP_SIZE 1000000
 
-
+//int N = 131072; //2^17
 
 enum OpType
 {

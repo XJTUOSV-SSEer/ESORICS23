@@ -27,7 +27,9 @@ $ make
 ```bash
 # path of database, flag, keyword, id, path of logfile
 ./rpc_client ./database/my.cdb 2 keyword 200 benchmark_client_rose_update.out 
-./rpc_client ./database/my.cdb 4 keyword 200 benchmark_client_rose_update.out
+./rpc_client ./database/my.cdb 4 secur 3 benchmark_client_rose_update.out
+./rpc_client ./database/my.cdb 4 secur 10 benchmark_client_rose_update.out
+./rpc_client ./database/my.cdb 4 secur 31 benchmark_client_rose_update.out
 ```
 
 ## search

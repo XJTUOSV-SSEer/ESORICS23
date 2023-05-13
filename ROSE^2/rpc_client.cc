@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     if(argc == 5 && flag == 1){//gen_db
         //数据库生成
         int thread_num = atoi(argv[3]);
-        DistSSE::gen_db_Rose_2(client,"./dataset/100-128.txt",thread_num);
+        DistSSE::gen_db_Rose_2(client,"./dataset/1-100000.txt",thread_num);
         std::cout << "gendb done." << std::endl;
     }else if(argc == 5 && flag == 3){
         //search

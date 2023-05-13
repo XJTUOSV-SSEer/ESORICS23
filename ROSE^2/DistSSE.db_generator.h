@@ -428,7 +428,7 @@ namespace DistSSE {
             //这里已经获得了一行的keyword->ids，下面是client->update
             gettimeofday(&t1, NULL);
             for(int i=0;i<ids.size();i++){
-                cout<<ids[i]<<endl;
+                //cout<<"insert id:" << ids[i]<<endl;
                 client.Update_Rose_2(keyword,ids[i],1);
             }
             gettimeofday(&t2, NULL);

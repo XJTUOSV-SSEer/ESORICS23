@@ -27,7 +27,7 @@ public:
     
     int Eval(unsigned char *out, const unsigned char *key, const std::string &data);
 
-    int update_token(unsigned char *out, const unsigned char *K1, const unsigned char *K2);//out : delta_k,其中K1是新的K
+    int update_token(unsigned char *out, const unsigned char *K1, const unsigned char *K2);//out : delta_k,其中K2是新的K
 
     int update(unsigned char *out, const unsigned char *token, const unsigned char *data);//out : new P, token : delta, data : old_P
 

@@ -49,20 +49,20 @@ vpath %.proto $(PROTOS_PATH)
 
 all: system-check rpc_client rpc_server benchmark random_db reset_csdb
 
-random_db : random_db.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o
+random_db : random_db.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o OMAP/Utilities.o OMAP/Bid.o OMAP/AES.o OMAP/AVLTree.o OMAP/ORAM.o OMAP/RAMStore.o 
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-benchmark : benchmark.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o
+benchmark : benchmark.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o OMAP/Utilities.o OMAP/Bid.o OMAP/AES.o OMAP/AVLTree.o OMAP/ORAM.o OMAP/RAMStore.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-reset_csdb : reset_csdb.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o
+reset_csdb : reset_csdb.o DistSSE.pb.o DistSSE.grpc.pb.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o OMAP/Utilities.o OMAP/Bid.o OMAP/AES.o OMAP/AVLTree.o OMAP/ORAM.o OMAP/RAMStore.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-rpc_client: DistSSE.pb.o DistSSE.grpc.pb.o rpc_client.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o
+rpc_client: DistSSE.pb.o DistSSE.grpc.pb.o rpc_client.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o OMAP/Utilities.o OMAP/Bid.o OMAP/AES.o OMAP/AVLTree.o OMAP/ORAM.o OMAP/RAMStore.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-rpc_server: DistSSE.pb.o DistSSE.grpc.pb.o rpc_server.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o
-	$(CXX) $^ $(LDFLAGS) -o $@
+rpc_server: DistSSE.pb.o DistSSE.grpc.pb.o rpc_server.o DistSSE.Util.o logger.o KUPRF.o common.o OMAP/OMAP.o OMAP/Utilities.o OMAP/Bid.o OMAP/AES.o OMAP/AVLTree.o OMAP/ORAM.o OMAP/RAMStore.o 
+	$(CXX) $^ $(LDFLAGS) -o $@ 
 
 .PRECIOUS: %.grpc.pb.cc
 %.grpc.pb.cc: %.proto

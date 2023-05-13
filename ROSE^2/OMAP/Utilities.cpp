@@ -213,8 +213,16 @@ double Utilities::getTimeFromHist(int id) {
     return 0;
 }
 
-int Utilities::getBid(std::string srchIndex) {
-    return 0;
+// int Utilities::getBid(std::string srchIndex) {
+//     return 0;
+// }
+
+Bid Utilities::getBid(string input) {
+    std::array< uint8_t, ID_SIZE> value;
+    std::fill(value.begin(), value.end(), 0);
+    std::copy(input.begin(), input.end(), value.begin());
+    Bid res(value);
+    return res;
 }
 
 std::array<uint8_t, 16> Utilities::encode(std::string keyword) {

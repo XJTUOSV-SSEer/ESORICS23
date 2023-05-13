@@ -15,6 +15,7 @@
 #include <unordered_set>
 #include <math.h>
 #include <OMAP/OMAP.h>
+#include <OMAP/Utilities.h>
 #define min(x, y) ( (x) < (y) ? (x) : (y) )
 #define max(x, y) ( (x) < (y) ? (y) : (x) )
 
@@ -41,7 +42,7 @@ namespace DistSSE {
         int MAX_THREADS;
         static std::mutex result_mtx;
         //static std::mutex cache_write_mtx;
-        int N = 256;
+        int N = 131072; //2^17
         bytes<Key> key{0};
         OMAP* OD_del;
         OMAP* OD_tree;
@@ -204,15 +205,29 @@ namespace DistSSE {
             unsigned char buf_L[256];
             string C;
             string L;
+            int i = 0;
             while(T.size() != 0){
+                i++;
                 int n = T.front().first;
+                //cout<<"n:"<<n<<endl;
                 int num = T.front().second;
+                //cout<<"num:"<<num<<endl;
                 T.pop();
                 if(n <= N){
                     num = 1;
                 }
-                kuprf.Eval(buf_L,(unsigned char*)K_u.c_str(),Util::H1(tk+std::to_string(n)+std::to_string(num)));
+                //print_hex((unsigned char*)K_u.c_str(),K_u.length());
+                kuprf.Eval(buf_L, (unsigned char*)K_u.c_str(), Util::H1(tk+std::to_string(n)+std::to_string(num)));
                 L.assign((char*)buf_L,33);
+                //cout<<"update之前的L:"<<endl;
+                print_hex((unsigned char*)L.c_str(),L.length());
+                //cout<<"update之前的tk:"<<endl;
+                print_hex((unsigned char*)tk.c_str(),tk.length());
+                //cout<<"update之前的n:"<<n<<endl;
+                //cout<<"update之前的num:"<<num<<endl;
+                if(i>15){
+                    break;
+                }
                 if(get(ss_db,L,C) == false){
                     int h = get_h(n);
                     int lln = 2*N + pow(2,h-1)*(n-1) - pow(2,h)*N + 1;
@@ -225,9 +240,12 @@ namespace DistSSE {
                     }
                     continue;
                 }
-                kuprf.update(buf_L, (unsigned char*)delta_k.c_str(), (unsigned char*)L.c_str());
-                L.assign((char*)buf_L,33);
                 delete_entry(ss_db,L);
+                kuprf.update(buf_L, (unsigned char*)delta_k.c_str(),(unsigned char*)L.c_str());
+                L.assign((char*)buf_L,33);
+                //cout<<"update之后的L:"<<endl;
+                print_hex((unsigned char*)L.c_str(),L.length());
+                store(ss_db,L,C);
                 if(n <= N){
                     R.push_back(C);
                 }else{
@@ -252,9 +270,10 @@ namespace DistSSE {
                     lNum = I_n_v[1];
                     rNode = I_n_v[2];
                     rNum = I_n_v[3];
+                    //cout<<"Node:"<<n<<" lNode:"<< lNode << " lNum:"<< lNum << " rNode:"<< rNode << " rNum:"<< rNum<<endl; 
                     T.push(make_pair(lNode,lNum));
                     int rNode_h = get_h(rNode);
-                    int rNode_lln = 2*N + pow(2,rNode_h-1)*(rNode-1) - pow(2,rNode_h) + 1; 
+                    int rNode_lln = 2 * N + pow(2,rNode_h-1)*(rNode-1) - pow(2,rNode_h)*N + 1; 
                     if(rNode_lln <= cnt_i){
                         T.push(make_pair(rNode,rNum));
                     }
@@ -481,39 +500,6 @@ namespace DistSSE {
             return Status::OK;
         }
 
-        // // update()实现单次更新操作
-        // Status update(ServerContext *context, const UpdateRequestMessage *request, ExecuteStatus *response) {
-        //     std::string l = request->l();
-        //     std::string e = request->e();
-        //     logger::log(logger::INFO) << "server update(ServerContext *context, const UpdateRequestMessage *request, ExecuteStatus *response): "<< std::endl;
-        //     int status = store(ss_db, l, e);
-        //     //assert(status == 0);
-        //     if (status != 0) {
-        //         response->set_status(false);
-        //         return Status::CANCELLED;
-        //     }
-        //     response->set_status(true);
-        //     return Status::OK;
-        // }
-
-        // /*batch_update()实现批量更新操作*/
-        // Status batch_update(ServerContext *context, ServerReader <UpdateRequestMessage> *reader, ExecuteStatus *response) {
-        //     std::string l;
-        //     std::string e;
-        //     //输出到终端
-        //     logger::log(logger::INFO) << "server batch_update(ServerContext *context, ServerReader<UpdateRequestMessage> *reader, ExecuteStatus *response)"<< std::endl;
-        //     UpdateRequestMessage request;
-        //     while (reader->Read(&request)) {
-        //         l = request.l();
-        //         e = request.e();
-        //         //std::cout<<"in update(), counter:  "<<request.counter()<<std::endl;
-        //         store(ss_db, l, e);
-        //         //  assert(status == 0);
-        //     }
-        //     response->set_status(true);
-        //     return Status::OK;
-        // }
-
         /*batch_update()实现批量更新操作*/
         Status batch_update_rose(ServerContext *context, ServerReader <UpdateRequestMessage> *reader, ExecuteStatus *response) {
             std::string L,R,D,C;
@@ -528,6 +514,19 @@ namespace DistSSE {
                 //std::cout<<"in update(), counter:  "<<request.counter()<<std::endl;
                 store_rose(ss_db, L, R, D, C);
                 //  assert(status == 0);
+            }
+            response->set_status(true);
+            return Status::OK;
+        }
+        Status batch_update_Rose_2(ServerContext *context, ServerReader <UpdateRequestMessage_Rose_2> *reader, ExecuteStatus *response) {
+            std::string L;
+            std::string C;
+            logger::log(logger::INFO) << "batch_update_Rose_2(ServerContext *context, ServerReader <UpdateRequestMessage_Rose_2> *reader, ExecuteStatus *response)"<< std::endl;
+            UpdateRequestMessage_Rose_2 request;
+            while(reader->Read(&request)){
+                L = request.l();
+                C = request.c();
+                store(ss_db, L, C);
             }
             response->set_status(true);
             return Status::OK;
@@ -553,7 +552,7 @@ namespace DistSSE {
             std::string w = request->w();
             std::string idorn = request->idorn();
             std::string value = request->value();
-            Bid key_OD = getBid(w + "#" + idorn);
+            Bid key_OD = Utilities::getBid(w + "#" + idorn);
             if(request->flag() == 0){
                 //OD_del
                 OD_del->insert(key_OD,value);
@@ -562,11 +561,6 @@ namespace DistSSE {
                 OD_tree->insert(key_OD,value);
             }
 
-            //assert(status == 0);
-            if (status != 0) {
-                response->set_status(false);
-                return Status::CANCELLED;
-            }
             response->set_status(true);
             return Status::OK;
         }
@@ -575,20 +569,57 @@ namespace DistSSE {
             logger::log(logger::INFO) << "OMAPFind(ServerContext *context, const OMAPFindMessage *request, OMAPFindReply* reply)"<< std::endl;
             std::string w = request->w();
             std::string idorn = request->idorn();
-            Bid key_OD = getBid(w + "#" + idorn);
+            //cout<<"收到key:("<<w + "," + idorn + ")" <<endl;
+            Bid key_OD = Utilities::getBid(w + "#" + idorn);
+            std::string value;
             if(request->flag() == 0){
                 //OD_del
-                string value = OD_del->find(key_OD);
+                value = OD_del->find(key_OD);
             }else{
                 //OD_tree
-                string value = OD_tree->find(key_OD);
+                value = OD_tree->find(key_OD);
             }
-            OMAPFindReply reply;
-            reply.set_value(value);
+            //cout<<"得到value:"<<value<<endl;
+            reply->set_value(value);
             return Status::OK;
         }
 
-
+        Status batchOMAPFind(ServerContext *context, const batchOMAPFindMessage *request, batchOMAPFindReply* reply){
+            logger::log(logger::INFO) <<"batchOMAPFind(ServerContext *context, const batchOMAPFindMessage *request, batchOMAPFindReply* reply)"<< std::endl;
+            std::string w = request->w();
+            int flag = request->flag();
+            std::string value;
+            for(int i=0;i<request->idorn_size();i++){
+                std::string idorn = request->idorn(i);
+                Bid key_OD = Utilities::getBid(w + "#" + idorn);
+                //cout<<"收到key:("<<w + "," + idorn + ")" <<endl;
+                if(flag == 0){
+                    value = OD_del->find(key_OD);
+                }else{
+                    value = OD_tree->find(key_OD);
+                }
+                //cout<<"得到value:"<<value<<endl;
+                reply->add_value(value);
+            }
+            return Status::OK;
+        }
+        
+        Status batchOMAPInsert(ServerContext *context, ServerReader <OMAPInsertMessage>* reader, ExecuteStatus* reply){
+            logger::log(logger::INFO) <<"batchOMAPInsert(ServerContext *context, ServerReader <OMAPInsertMessage> reader, ExecuteStatus* reply)"<< std::endl;
+            OMAPInsertMessage request;
+            while(reader->Read(&request)){
+                Bid key_OD = Utilities::getBid(request.w() + "#" + request.idorn());
+                //cout<<"收到key:("<<request.w() + "," + request.idorn() + ")" <<endl;
+                if(request.flag() == 0){
+                    OD_del->insert(key_OD,request.value());
+                }else{
+                    OD_tree->insert(key_OD,request.value());
+                }
+                //cout<<"插入value:"<<request.value()<<endl;
+            }
+            reply->set_status(true);
+            return Status::OK;
+        }
     };
 
 }// namespace DistSSE
