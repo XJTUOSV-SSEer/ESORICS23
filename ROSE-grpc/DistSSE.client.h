@@ -129,16 +129,6 @@ namespace DistSSE {
             KUPRF::init();
             std::cout << "--------The content of Rocksdb------------" << std::endl;
             for (it->SeekToFirst(); it->Valid(); it->Next()) {
-                // key = it->key().ToString();
-                // value = it->value().ToString();
-                // std::cout << key + " " + value << std::endl;
-                // if (key[0] == 's') {
-                //     sc_mapper[key.substr(1, key.length() - 1)] = value;
-                // } else {
-                //     uc_mapper[key.substr(1, key.length() - 1)] = std::stoi(value);
-                // }
-                // counter++;
-
                 //ROSE
                 /**
                  * rocksdb中的key

@@ -355,6 +355,8 @@ namespace DistSSE {
       */
     void gen_db_rose(Client &client, const vector<string>& serverEDB,unsigned int n_threads) {
         logger::log(logger::INFO) << "in gen_db_rose" << std::endl;
+        struct timeval t1, t2;
+        gettimeofday(&t1, NULL);
         std::vector <std::thread> threads;
         int N_entries = serverEDB.size()/4;
         int numOfEntries1 = N_entries/ n_threads;
@@ -366,6 +368,16 @@ namespace DistSSE {
         for (unsigned int i = 0; i < n_threads; i++) {
             threads[i].join();
         }
+
+        gettimeofday(&t2, NULL);
+        //输出到日志文件
+        logger::log_benchmark()<< "update time: "
+                               << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+                               << std::endl;
+        //输出到终端
+        logger::log(logger::INFO)<< "update time: "
+                                 << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+                                 << std::endl;
         
     }
 
