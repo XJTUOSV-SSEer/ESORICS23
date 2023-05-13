@@ -7,7 +7,7 @@ using DistSSE::SearchRequestMessage;
 
 int main(int argc, char **argv) {
     DistSSE::logger::set_severity(DistSSE::logger::INFO);
-    DistSSE::Client client(grpc::CreateChannel("0.0.0.0:50051", grpc::InsecureChannelCredentials()),
+    DistSSE::Client client(grpc::CreateChannel("192.168.1.98:50051", grpc::InsecureChannelCredentials()),
                            std::string(argv[1]));
 
     //数据库生成
@@ -34,6 +34,13 @@ int main(int argc, char **argv) {
         std::string id = std::string(argv[4]);
         client.Update_Rose_2(keyword,id,0);
         std::cout << "update(del) done." << std::endl;
+    }else if(argc == 6 && flag == 5){
+        //genramdomdb
+        std::string keyword = std::string(argv[3]);
+        int N_entries = atoi(argv[4]);
+        int thread_num = atoi(argv[5]);
+        DistSSE::gen_db_random(client,N_entries,keyword,thread_num);
+        std::cout << "gendb done." << std::endl;
     }else{
         std::cerr << "argc error" << std::endl;
         exit(-1);
