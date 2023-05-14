@@ -38,7 +38,7 @@ namespace DistSSE{
 			UpdateRequestMessage request;
 			ClientContext context;
 			ExecuteStatus exec_status;
-			std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("192.168.1.98:50051", grpc::InsecureChannelCredentials())));
+			std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials())));
 			std::unique_ptr <ClientWriterInterface<UpdateRequestMessage>> writer(stub_->batch_update(&context, &exec_status));
 			for (size_t i = 0; i < N_entries; i++) {
 				prng.GenerateBlock(tmp, sizeof(tmp));

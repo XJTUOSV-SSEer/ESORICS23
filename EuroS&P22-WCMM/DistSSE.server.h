@@ -525,6 +525,7 @@ public:
 		std::unordered_set<std::string> Uts;
 		std::string ut; 
 		int i = request->c1();
+		//std::cout<<"i:"<<i<<std::endl;
 		std::string s_w = request->s_w();
 		std::string st = request->st();
 		// std::cout<<"st: ";
@@ -544,6 +545,7 @@ public:
 			st = M.substr(0,16);
 			std::string op = M.substr(16,1);
 			std::string id = M.substr(17,15);
+			//std::cout<<op<<std::endl;
 			if(op == "1" && Del.find(id) == Del.end()){
 				R.insert(id);
 			}else if(op == "0"){
@@ -551,6 +553,7 @@ public:
 			}
 			i--;
 		}
+		std::cout<<R.size()<<std::endl;
 		//i = 1
 		ut = Util::H1(s_w + st);
 		Uts.insert(ut);
@@ -576,6 +579,7 @@ public:
 			if(op == "1" && Del.find(id) == Del.end()){
 				R.insert(id);
 			}
+
 		}
 		//P实际上多出一个
 		if(P.size()-1 > R.size()){
@@ -686,6 +690,7 @@ std::mutex DistSSE::DistSSEServiceImpl::result_mtx;
 void RunServer(std::string db_path, std::string cache_path, int concurrent) {
 
 
+  //std::string server_address("192.168.1.98:50051");
   std::string server_address("localhost:50051");
   DistSSE::DistSSEServiceImpl service(db_path, cache_path, concurrent);
   

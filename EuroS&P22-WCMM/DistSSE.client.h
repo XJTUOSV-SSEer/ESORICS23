@@ -311,13 +311,16 @@ public:
 			std::string s_w = gen_enc_token(w,k_s,iv_s);
 			c1++;
 			std::string st = gen_enc_token(w+std::to_string(c1)+std::to_string(c2),k_t,iv_t);
-			
+			st = st.substr(0,16);
+			//std::cout<<"c1:"<<c1<<std::endl;
 			if(c1 == 1){
 				//std::cout<<Util::H2(s_w + st).length()<<std::endl;
 				std::string zero = std::string(16,'0');
 				e = Util::Xor(Util::H2(s_w + st),zero + op + ind);
 			}else{
 				std::string oldst = gen_enc_token(w + std::to_string(c1 - 1) + std::to_string(c2),k_t,iv_t);
+				oldst = oldst.substr(0,16);
+				std::cout<<oldst.length()<<std::endl;//为什么前100个长度是16，后面都是32？
 				e = Util::Xor(Util::H2(s_w + st),oldst + op + ind);
 			}
 			std::string k_w = gen_enc_token(w + std::to_string(c2), k_p, iv_p);
@@ -367,6 +370,7 @@ public:
 			int c1 = WC1[w];
 			int c2 = WC2[w];
 			std::string st = gen_enc_token(w + std::to_string(c1) + std::to_string(c2) , k_t ,iv_t);
+			st = st.substr(0,16);
 
 			request.set_s_w(s_w);
 			request.set_st(st);
@@ -437,6 +441,8 @@ public:
 		SearchRequestMessage request = gen_search_token(w);
 		ClientContext context;
 		// 执行RPC操作，返回类型为 std::unique_ptr<ClientReaderInterface<SearchReply>>
+		struct timeval t1,t2;
+		gettimeofday(&t1, NULL);
 		std::unique_ptr<ClientReaderInterface<SearchReply>> reader = stub_->search(&context, request);
 		// 读取返回列表
 		int counter = 0;
@@ -448,13 +454,14 @@ public:
 			//Util::print_bytes((unsigned char*)reply.proof(i).c_str(),reply.proof(i).length());
 			P.push_back(reply.proof(i));
 		}
+		//std::cout<<reply.ind_size()<<std::endl;
 		for(int i=0;i<reply.ind_size();i++){
 			R.insert(reply.ind(i));
 			counter++;
 		}
 		//verify
-		// std::cout<<"P: "<<P.size()<<std::endl;
-		// std::cout<<"R: "<<R.size()<<std::endl;
+		std::cout<<"P: "<<P.size()<<std::endl;
+		std::cout<<"R: "<<R.size()<<std::endl;
 		if(verify(P,R,w) == "Reject"){
 			return "Reject";
 		}else{
@@ -466,6 +473,15 @@ public:
 				logger::log(logger::INFO) << " search result: "<< counter<< std::endl;
 			}
 		}
+		gettimeofday(&t2, NULL);
+		//输出到日志文件
+		logger::log_benchmark()<<"search time: "
+							<< ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+							<< std::endl;
+		//输出到终端
+		logger::log(logger::INFO)<<"search time: "
+								<< ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+								<< std::endl;
 		return "Accept";
 	}
 
@@ -544,6 +560,7 @@ public:
 		// std::cout<<R.size()<<std::endl;
 		// std::cout<<R_prime.size()<<std::endl;
 		if(set_equal(R,R_prime)){
+			std::cout<<"Accept"<<std::endl;
 			return "Accept";
 		}else{
 			return "Reject";

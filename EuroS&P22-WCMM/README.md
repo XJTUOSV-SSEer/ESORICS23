@@ -24,6 +24,9 @@ please check into 2.0 version for building
 ./rpc_server ./database/my.sdb ./database/my.scadb 1 benchmark_server.out
 
 # update
+./rpc_client ./database/my.cdb 100 keyword_10e1 2 1 benchmark_client_10e1.update.out
+./rpc_client ./database/my.cdb 1000 keyword_10e1 2 1 benchmark_client_10e1.update.out
+./rpc_client ./database/my.cdb 10000 keyword_10e1 2 1 benchmark_client_10e1.update.out
 ./rpc_client ./database/my.cdb 100000 keyword_10e1 2 1 benchmark_client_10e1.update.out
 
 # search
