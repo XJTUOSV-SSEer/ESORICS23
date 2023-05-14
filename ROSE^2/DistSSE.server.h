@@ -209,9 +209,9 @@ namespace DistSSE {
             while(T.size() != 0){
                 //i++;
                 int n = T.front().first;
-                //cout<<"n:"<<n<<endl;
+                cout<<"n:"<<n<<endl;
                 int num = T.front().second;
-                //cout<<"num:"<<num<<endl;
+                cout<<"num:"<<num<<endl;
                 T.pop();
                 if(n <= N){
                     num = 1;
@@ -244,7 +244,7 @@ namespace DistSSE {
                 kuprf.update(buf_L, (unsigned char*)delta_k.c_str(),(unsigned char*)L.c_str());
                 L.assign((char*)buf_L,33);
                 //cout<<"update之后的L:"<<endl;
-                print_hex((unsigned char*)L.c_str(),L.length());
+                //print_hex((unsigned char*)L.c_str(),L.length());
                 store(ss_db,L,C);
                 if(n <= N){
                     R.push_back(C);
@@ -270,7 +270,7 @@ namespace DistSSE {
                     lNum = I_n_v[1];
                     rNode = I_n_v[2];
                     rNum = I_n_v[3];
-                    //cout<<"Node:"<<n<<" lNode:"<< lNode << " lNum:"<< lNum << " rNode:"<< rNode << " rNum:"<< rNum<<endl; 
+                    cout<<"Node:"<<n<<" lNode:"<< lNode << " lNum:"<< lNum << " rNode:"<< rNode << " rNum:"<< rNum<<endl; 
                     T.push(make_pair(lNode,lNum));
                     int rNode_h = get_h(rNode);
                     int rNode_lln = 2 * N + pow(2,rNode_h-1)*(rNode-1) - pow(2,rNode_h)*N + 1; 

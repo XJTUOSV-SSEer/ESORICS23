@@ -7,7 +7,9 @@ using DistSSE::SearchRequestMessage;
 
 int main(int argc, char **argv) {
     DistSSE::logger::set_severity(DistSSE::logger::INFO);
-    DistSSE::Client client(grpc::CreateChannel("192.168.1.98:50051", grpc::InsecureChannelCredentials()),
+    // DistSSE::Client client(grpc::CreateChannel("192.168.1.98:50051", grpc::InsecureChannelCredentials()),
+    //                        std::string(argv[1]));
+    DistSSE::Client client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()),
                            std::string(argv[1]));
 
     //数据库生成
