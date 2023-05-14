@@ -21,16 +21,16 @@ please check into 2.0 version for building
  $ make
 ```
 # run
-./rpc_server Euro.sdb Euro.scadb 1 benchmark_server.out
+./rpc_server ./database/my.sdb ./database/my.scadb 1 benchmark_server.out
 
 # update
-./rpc_client Euro.cdb 10 keyword_10e1 2 1 benchmark_client_10e1.update.out
+./rpc_client ./database/my.cdb 100000 keyword_10e1 2 1 benchmark_client_10e1.update.out
 
 # search
-./rpc_client Euro.cdb 4 keyword_10e1 3 1 benchmark_client_10e1.search.out
+./rpc_client ./database/my.cdb 4 keyword_10e1 3 1 benchmark_client_10e1.search.out
 
 # random delete
-./rpc_client Euro.cdb 10 keyword_10e1 4 1 benchmark_random_delete.out
+./rpc_client ./database/my.cdb 10 keyword_10e1 4 1 benchmark_random_delete.out
 
 
 # 待解决的bug:

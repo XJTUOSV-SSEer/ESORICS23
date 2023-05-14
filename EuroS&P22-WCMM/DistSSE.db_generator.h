@@ -29,6 +29,7 @@ namespace DistSSE{
 
 		static void generation_job_Euro(Client* client,std::string keyword, unsigned int thread_id, size_t N_entries,double deleteRatio){
 			srand(time(NULL));
+			struct timeval t1, t2;
 			//std::string id_string = std::to_string(thread_id);
 			CryptoPP::AutoSeededRandomPool prng;
 			int ind_len = AES::BLOCKSIZE - 1 ; // AES::BLOCKSIZE = 16
@@ -37,7 +38,7 @@ namespace DistSSE{
 			UpdateRequestMessage request;
 			ClientContext context;
 			ExecuteStatus exec_status;
-			std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials())));
+			std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("192.168.1.98:50051", grpc::InsecureChannelCredentials())));
 			std::unique_ptr <ClientWriterInterface<UpdateRequestMessage>> writer(stub_->batch_update(&context, &exec_status));
 			for (size_t i = 0; i < N_entries; i++) {
 				prng.GenerateBlock(tmp, sizeof(tmp));
@@ -54,6 +55,8 @@ namespace DistSSE{
 			Status status = writer->Finish();
 			std::string log = "Random DB generation: thread " + std::to_string(thread_id) + " completed: " +
 							std::to_string(N_entries) + " keyword-filename";
+							
+			std::cout<<log<<std::endl;
 			logger::log(logger::INFO) << log << std::endl;
 		}
 
