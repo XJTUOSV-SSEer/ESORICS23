@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
     //DistSSE::logger::log(DistSSE::logger::INFO) << " client test :  "<< std::endl;
     //DistSSE::logger::log_benchmark() << "client to file" <<std::endl;
     // Instantiate the client and channel isn't authenticated
-    DistSSE::Client client(grpc::CreateChannel("192.168.1.98:50051", grpc::InsecureChannelCredentials()),
+    DistSSE::Client client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()),
                            std::string(argv[1]));
 
     //数据库生成

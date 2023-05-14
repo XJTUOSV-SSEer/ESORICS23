@@ -275,7 +275,7 @@ namespace DistSSE {
         UpdateRequestMessage request;
         ClientContext context;
         ExecuteStatus exec_status;
-        std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("192.168.1.98:50051", grpc::InsecureChannelCredentials())));
+        std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials())));
         std::unique_ptr <ClientWriterInterface<UpdateRequestMessage>> writer(stub_->batch_update_rose(&context, &exec_status)); //batch_update是流式传输
         string L, R, D, C;
         for (size_t i = 0; i < N_entries; i++) {
@@ -288,10 +288,10 @@ namespace DistSSE {
             //发给server
             writer->Write(client->gen_update_request_rose(L,R,D,C));
             double random = rand() % (1000) / (double)(1000);
-            if(random < 1.0){
-				client->encrypt(L, R, D, C, op_del, keyword, int_name);
-                writer->Write(client->gen_update_request_rose(L,R,D,C));
-			}
+            // if(random < 1.0){
+			// 	client->encrypt(L, R, D, C, op_del, keyword, int_name);
+            //     writer->Write(client->gen_update_request_rose(L,R,D,C));
+			// }
         }
         // now tell server we have finished
         writer->WritesDone();
@@ -348,7 +348,7 @@ namespace DistSSE {
         UpdateRequestMessage request;
         ClientContext context;
         ExecuteStatus exec_status;
-        std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("192.168.1.98:50051", grpc::InsecureChannelCredentials())));
+        std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials())));
         std::unique_ptr <ClientWriterInterface<UpdateRequestMessage>> writer(stub_->batch_update_rose(&context, &exec_status)); //batch_update是流式传输
         auto iter_begin = serverEDB.begin() + thread_id * N_entries * 4;
         auto iter_end = iter_begin + N_entries * 4;

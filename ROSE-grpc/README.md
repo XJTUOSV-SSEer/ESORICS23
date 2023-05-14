@@ -23,7 +23,7 @@ $ ./rpc_server ./database/my.sdb ./database/my.scadb 1 benchmark_server.out
 ## rose-grpc中的gendb：从文件中读到rocksdb（持久化存储，方便search）
 ## path of database, flag, number of threads, path of logfile
 ./rpc_client ./database/my.cdb 1 1 benchmark_client_rose_gen_db.out
-./rpc_client ./database/my.cdb 1 1 keyword 100000 benchmark_client_rose_gen_db.out
+./rpc_client ./database/my.cdb 1 1 keyword 10 benchmark_client_rose_gen_db.out
 
 #update_add
 ## path of database, flag, number of threads, number of entries, path of logfile
@@ -31,11 +31,11 @@ $ ./rpc_server ./database/my.sdb ./database/my.scadb 1 benchmark_server.out
 
 #search
 ## path of database, flag, number of threads, keyword, path of logfile
-./rpc_client /tmp/my.cdb 3 1 2001 benchmark_client_rose.search.out   #还不能搜不存在的
+./rpc_client ./database/my.cdb 3 1 keyword benchmark_client_rose.search.out   #还不能搜不存在的
 
 #update_delete
 ## path of database, flag, number of threads, number of entries, path of logfile
-./rpc_client /tmp/my.cdb 4 1 2001 1000 benchmark_client_rose.update_del.out
+./rpc_client ./database/my.cdb 4 1 2001 1000 benchmark_client_rose.update_del.out
 ```
 
 # 不能连续搜索 

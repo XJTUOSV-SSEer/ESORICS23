@@ -489,7 +489,7 @@ namespace DistSSE {
                 memcpy(cip->C, get(ss_db,"C"+s_L1).c_str(), CIPHER_SIZE);
 
                 Hash_H(buf2, 1 + 32 * 2 + 33, (const unsigned char *) s_T1.c_str(), cip->R);
-                Xor(1 + 33 + 32 * 2, cip->D, buf2, buf3);
+                Xor(1 + 33 + 32 * 2, cip->D, buf2, buf3); //buf3是op||x||L||T
                 cout<<(int)buf3[0]<<endl;
                 if (buf3[0] == 0xf0) // del
                 {
