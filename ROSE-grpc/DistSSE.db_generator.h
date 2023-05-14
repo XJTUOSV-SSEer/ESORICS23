@@ -266,6 +266,7 @@ namespace DistSSE {
     }
     
     static void generation_job_2(Client *client, std::string keyword, unsigned int thread_id, size_t N_entries) {
+        srand(time(NULL));
         //std::string id_string = std::to_string(thread_id);
         CryptoPP::AutoSeededRandomPool prng;
         int ind_len = AES::BLOCKSIZE / 2; // AES::BLOCKSIZE = 16
@@ -286,6 +287,11 @@ namespace DistSSE {
             client->encrypt(L, R, D, C, op_add , keyword, int_name);
             //发给server
             writer->Write(client->gen_update_request_rose(L,R,D,C));
+            double random = rand() % (1000) / (double)(1000);
+            if(random < 1.0){
+				client->encrypt(L, R, D, C, op_del, keyword, int_name);
+                writer->Write(client->gen_update_request_rose(L,R,D,C));
+			}
         }
         // now tell server we have finished
         writer->WritesDone();

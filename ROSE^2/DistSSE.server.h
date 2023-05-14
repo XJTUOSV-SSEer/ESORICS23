@@ -205,9 +205,9 @@ namespace DistSSE {
             unsigned char buf_L[256];
             string C;
             string L;
-            int i = 0;
+            //int i = 0;
             while(T.size() != 0){
-                i++;
+                //i++;
                 int n = T.front().first;
                 //cout<<"n:"<<n<<endl;
                 int num = T.front().second;
@@ -220,14 +220,14 @@ namespace DistSSE {
                 kuprf.Eval(buf_L, (unsigned char*)K_u.c_str(), Util::H1(tk+std::to_string(n)+std::to_string(num)));
                 L.assign((char*)buf_L,33);
                 //cout<<"update之前的L:"<<endl;
-                print_hex((unsigned char*)L.c_str(),L.length());
+                //print_hex((unsigned char*)L.c_str(),L.length());
                 //cout<<"update之前的tk:"<<endl;
-                print_hex((unsigned char*)tk.c_str(),tk.length());
+                //print_hex((unsigned char*)tk.c_str(),tk.length());
                 //cout<<"update之前的n:"<<n<<endl;
                 //cout<<"update之前的num:"<<num<<endl;
-                if(i>15){
-                    break;
-                }
+                // if(i>15){
+                //     break;
+                // }
                 if(get(ss_db,L,C) == false){
                     int h = get_h(n);
                     int lln = 2*N + pow(2,h-1)*(n-1) - pow(2,h)*N + 1;

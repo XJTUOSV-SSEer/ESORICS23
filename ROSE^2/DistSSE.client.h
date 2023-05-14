@@ -860,6 +860,7 @@ namespace DistSSE {
         }
 
         std::string search_Rose_2(const std::string w){
+            struct timeval t1, t2;
             logger::log(logger::INFO) << "client search_Rose_2(const std::string w):  " << std::endl;
             search_token st = trapdoor_Rose_2(w);
             SearchRequestMessage_Rose_2 request;
@@ -875,16 +876,24 @@ namespace DistSSE {
             int counter = 0;
             SearchReply_Rose_2 reply;
             std::unordered_set <std::string> result;
+            gettimeofday(&t1, NULL);
             while (reader->Read(&reply)) {
                 //logger::log(logger::INFO) << reply.ind() << std::endl;
                 counter++;
                 result.insert(reply.c());
             }
-
             logger::log(logger::INFO) << " search result counter: " << counter << std::endl;
             logger::log(logger::INFO) << " search set result: " << result.size() << std::endl;
+            gettimeofday(&t2, NULL);
+            //输出到日志文件
+            logger::log_benchmark()<< "keyword: "+ w +" "+ std::to_string(counter)+" entries "+"update time: "
+                               << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+                               << std::endl;
+            //输出到终端
+            logger::log(logger::INFO)<< "keyword: "+ w +" "+ std::to_string(counter)+" entries "+"update time: "
+                                 << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+                                 << std::endl;
             return "OK";
-
         }
 
         void verify(const std::string w, std::unordered_set <std::string> result) {
