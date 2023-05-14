@@ -255,31 +255,46 @@ namespace DistSSE {
     * 
     * gen_db相当于一个独立的功能，在搜索之前根据已有的数据构建rocksdb数据库
     */
-    // static void generation_job_2(Client *client, std::string keyword, unsigned int thread_id, size_t N_entries) {
-    //     //std::string id_string = std::to_string(thread_id);
-    //     CryptoPP::AutoSeededRandomPool prng;
-    //     int ind_len = AES::BLOCKSIZE / 2; // AES::BLOCKSIZE = 16
-    //     byte tmp[ind_len];
-    //     // for gRPC
-    //     UpdateRequestMessage request;
-    //     ClientContext context;
-    //     ExecuteStatus exec_status;
-    //     std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials())));
-    //     std::unique_ptr <ClientWriterInterface<UpdateRequestMessage>> writer(stub_->batch_update(&context, &exec_status)); //batch_update是流式传输
-    //     for (size_t i = 0; i < N_entries; i++) {
-    //         prng.GenerateBlock(tmp, sizeof(tmp));
-    //         //随机生成
-    //         std::string ind = /*Util.str2hex*/(std::string((const char *) tmp, ind_len));
-    //         writer->Write(client->gen_update_request("1", keyword, ind));
-    //     }
-    //     // now tell server we have finished
-    //     writer->WritesDone();
-    //     Status status = writer->Finish();
 
-    //     std::string log = "Random DB generation: thread " + std::to_string(thread_id) + " completed: " +
-    //                       std::to_string(N_entries) + " keyword-filename";
-    //     logger::log(logger::INFO) << log << std::endl;
-    // }
+    
+    int string_to_int(string S){
+        int res;
+        for(int i=0;i<S.length();i++){
+            res += int(S[i]);
+        }
+        return res;
+    }
+    
+    static void generation_job_2(Client *client, std::string keyword, unsigned int thread_id, size_t N_entries) {
+        //std::string id_string = std::to_string(thread_id);
+        CryptoPP::AutoSeededRandomPool prng;
+        int ind_len = AES::BLOCKSIZE / 2; // AES::BLOCKSIZE = 16
+        byte tmp[ind_len];
+        // for gRPC
+        UpdateRequestMessage request;
+        ClientContext context;
+        ExecuteStatus exec_status;
+        std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("192.168.1.98:50051", grpc::InsecureChannelCredentials())));
+        std::unique_ptr <ClientWriterInterface<UpdateRequestMessage>> writer(stub_->batch_update_rose(&context, &exec_status)); //batch_update是流式传输
+        string L, R, D, C;
+        for (size_t i = 0; i < N_entries; i++) {
+            prng.GenerateBlock(tmp, sizeof(tmp));
+            //随机生成ind
+            std::string name = std::string((const char *) tmp, ind_len);//字符串不是16进制的
+            int int_name = string_to_int(name);
+            //存在client
+            client->encrypt(L, R, D, C, op_add , keyword, int_name);
+            //发给server
+            writer->Write(client->gen_update_request_rose(L,R,D,C));
+        }
+        // now tell server we have finished
+        writer->WritesDone();
+        Status status = writer->Finish();
+
+        std::string log = "Random DB generation: thread " + std::to_string(thread_id) + " completed: " +
+                          std::to_string(N_entries) + " keyword-filename";
+        logger::log(logger::INFO) << log << std::endl;
+    }
 
     /**
       *
@@ -288,38 +303,39 @@ namespace DistSSE {
       * @param keyword 关键词
       * @param n_threads 线程数
       */
-    // void gen_db_2(Client &client, size_t N_entries,std::string keyword, unsigned int n_threads) {
-    //     logger::log(logger::INFO) << "in gen_db_2" << std::endl;
-    //     // std::atomic_size_t entries_counter(0);
-    //     // client->start_update_session();
-    //     // unsigned int n_threads = std::thread::hardware_concurrency();
-    //     std::vector <std::thread> threads;
-    //     // std::mutex rpc_mutex;
-    //     struct timeval t1, t2;
-    //     gettimeofday(&t1, NULL);
-    //     int numOfEntries1 = N_entries / n_threads;
-    //     int numOfEntries2 = N_entries / n_threads + N_entries % n_threads;
-    //     //std::string log = "Random DB generation: thread " + std::to_string(thread_id) + " completed: " + std::to_string(N_entries) + " keyword-filename";
-    //     //logger::log(logger::INFO) << log << std::endl;
-    //     //logger::log(logger::INFO) << std::to_string(numOfEntries1)+" "+std::to_string(numOfEntries2) << std::endl;
-    //     for (unsigned int i = 0; i < n_threads - 1; i++) {
-    //         threads.push_back(std::thread(generation_job_2, &client, keyword, i, numOfEntries1));
-    //     }
-    //     threads.push_back(std::thread(generation_job_2, &client,keyword, n_threads - 1, numOfEntries2));
-    //     for (unsigned int i = 0; i < n_threads; i++) {
-    //         threads[i].join();
-    //     }
-    //     gettimeofday(&t2, NULL);
-    //     //输出到日志文件
-    //     logger::log_benchmark()<< "keyword: "+keyword+" "+std::to_string(N_entries)+" entries "+"update time: "
-    //                            << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
-    //                            << std::endl;
-    //     //输出到终端
-    //     logger::log(logger::INFO)<< "keyword: "+keyword+" "+std::to_string(N_entries)+" entries "+"update time: "
-    //                              << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
-    //                              << std::endl;
-    //     // client->end_update_session();
-    // }
+    void gen_db_2(Client &client, size_t N_entries,std::string keyword, unsigned int n_threads) {
+        logger::log(logger::INFO) << "in gen_db_2" << std::endl;
+        // std::atomic_size_t entries_counter(0);
+        // client->start_update_session();
+        // unsigned int n_threads = std::thread::hardware_concurrency();
+        //std::vector <std::thread> threads;
+        // std::mutex rpc_mutex;
+        struct timeval t1, t2;
+        gettimeofday(&t1, NULL);
+        generation_job_2(&client, keyword, n_threads, N_entries);
+        // int numOfEntries1 = N_entries / n_threads;
+        // int numOfEntries2 = N_entries / n_threads + N_entries % n_threads;
+        //std::string log = "Random DB generation: thread " + std::to_string(thread_id) + " completed: " + std::to_string(N_entries) + " keyword-filename";
+        //logger::log(logger::INFO) << log << std::endl;
+        //logger::log(logger::INFO) << std::to_string(numOfEntries1)+" "+std::to_string(numOfEntries2) << std::endl;
+        // for (unsigned int i = 0; i < n_threads - 1; i++) {
+        //     threads.push_back(std::thread(generation_job_2, &client, keyword, i, numOfEntries1));
+        // }
+        // threads.push_back(std::thread(generation_job_2, &client,keyword, n_threads - 1, numOfEntries2));
+        // for (unsigned int i = 0; i < n_threads; i++) {
+        //     threads[i].join();
+        // }
+        gettimeofday(&t2, NULL);
+        //输出到日志文件
+        logger::log_benchmark()<< "keyword: "+keyword+" "+std::to_string(N_entries)+" entries "+"update time: "
+                               << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+                               << std::endl;
+        //输出到终端
+        logger::log(logger::INFO)<< "keyword: "+keyword+" "+std::to_string(N_entries)+" entries "+"update time: "
+                                 << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+                                 << std::endl;
+        // client->end_update_session();
+    }
 
     static void generation_job_rose(Client* client,const vector<string>& serverEDB, unsigned int thread_id, size_t N_entries) {
         // for gRPC
@@ -381,14 +397,6 @@ namespace DistSSE {
         
     }
 
-    int string_to_int(string S){
-        int res;
-        for(int i=0;i<S.length();i++){
-            res += int(S[i]);
-        }
-        return res;
-    }
-
     static void update_job(Client *client, string keyword,int thread_id,int flag, size_t N_entries){
         OpType type;
         if(flag == 0){
@@ -397,7 +405,7 @@ namespace DistSSE {
             type = op_add;
         }
         CryptoPP::AutoSeededRandomPool prng;
-        int ind_len = 5;
+        int ind_len = 8;
         string L, R, D, C;
         byte tmp[ind_len];
         // for gRPC

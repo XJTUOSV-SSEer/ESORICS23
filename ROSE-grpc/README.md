@@ -23,6 +23,7 @@ $ ./rpc_server ./database/my.sdb ./database/my.scadb 1 benchmark_server.out
 ## rose-grpc中的gendb：从文件中读到rocksdb（持久化存储，方便search）
 ## path of database, flag, number of threads, path of logfile
 ./rpc_client ./database/my.cdb 1 1 benchmark_client_rose_gen_db.out
+./rpc_client ./database/my.cdb 1 1 keyword 100000 benchmark_client_rose_gen_db.out
 
 #update_add
 ## path of database, flag, number of threads, number of entries, path of logfile

@@ -1,1 +1,1 @@
-./rpc_client ./database/my.cdb 5 keyword 1000000 4 benchmark_client_rose_gen_random_db.out
+./rpc_client ./database/my.cdb 5 keyword 100000 1 benchmark_client_rose_gen_random_db.out
