@@ -596,7 +596,6 @@ namespace DistSSE {
             string tpd_L, tpd_T, L, R, D, C;
             //search stage 1: generate trapdoor
             trapdoor(w, tpd_L, tpd_T, L, R, D, C);
-
             //search stage 2: find cipehrtexts
             search(tpd_L, tpd_T, L, R, D, C);
             return "OK";

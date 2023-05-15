@@ -209,9 +209,9 @@ namespace DistSSE {
             while(T.size() != 0){
                 //i++;
                 int n = T.front().first;
-                cout<<"n:"<<n<<endl;
+                //cout<<"n:"<<n<<endl;
                 int num = T.front().second;
-                cout<<"num:"<<num<<endl;
+                //cout<<"num:"<<num<<endl;
                 T.pop();
                 if(n <= N){
                     num = 1;
@@ -245,7 +245,7 @@ namespace DistSSE {
                 L.assign((char*)buf_L,33);
                 //cout<<"update之后的L:"<<endl;
                 //print_hex((unsigned char*)L.c_str(),L.length());
-                store(ss_db,L,C);
+                //store(ss_db,L,C);
                 if(n <= N){
                     R.push_back(C);
                 }else{

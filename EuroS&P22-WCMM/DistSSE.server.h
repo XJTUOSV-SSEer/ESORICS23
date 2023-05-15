@@ -690,8 +690,8 @@ std::mutex DistSSE::DistSSEServiceImpl::result_mtx;
 void RunServer(std::string db_path, std::string cache_path, int concurrent) {
 
 
-  //std::string server_address("192.168.1.98:50051");
-  std::string server_address("localhost:50051");
+  std::string server_address("192.168.1.98:50051");
+  //std::string server_address("localhost:50051");
   DistSSE::DistSSEServiceImpl service(db_path, cache_path, concurrent);
   
   ServerBuilder builder;
