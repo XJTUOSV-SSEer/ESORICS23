@@ -1,0 +1,1 @@
+./rpc_client ./database/my.cdb 3 keyword benchmark_client_rose_search.out

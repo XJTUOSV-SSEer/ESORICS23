@@ -264,255 +264,6 @@ public:
 			}
 	}
 
-	/*void search_parallel (std::string kw, std::string tw, int uc, std::set<std::string>& result){
-		// std::set<std::string> result;
-		std::string cache_string, result_string;
-
-		ThreadPool fetch_pool(2);
-		ThreadPool decrypt_pool(1);
-		static struct timeval l, r;
-	
-		auto read_cache_job = [&tw, &result, &cache_string] () {
-			cache_string = get(cache_db, tw);
-		};
-
-		auto decrypt_job = [&result_string, &result] (const std::string st_c_, const std::string e) {
-			//gettimeofday(&l, NULL);
-			std::string value = Util::Xor( e, Util::H2(st_c_) );
-			std::string op, ind;			
-			parse(value, op, ind);
-			result.insert(ind);
-			result_string += Util::str2hex(ind) + "|";
-			//gettimeofday(&r, NULL);
-			//time  +=  ((r.tv_sec - l.tv_sec) * 1000000.0 + r.tv_usec - l.tv_usec) / 1000.0;
-		};
-	
-		auto lookup_job = [&decrypt_job, &decrypt_pool]( const std::string st_c_, const std::string u){
-			std::string e;
-			gettimeofday(&l, NULL);
-			bool found = get(ss_db, u, e);
-			gettimeofday(&r, NULL);
-			// time  +=  ((r.tv_sec - l.tv_sec) * 1000000.0 + r.tv_usec - l.tv_usec) / 1000.0;
-			if(found) {
-				decrypt_pool.enqueue(decrypt_job, st_c_, e);
-			}else{
-				logger::log(logger::ERROR) << "We were supposed to find something!" << std::endl;
-			}
-		};
-
-
-		auto derive_job = [&kw, &tw, &lookup_job, &fetch_pool]( const int begin, const int max, const int step) {
-			for(int i = begin; i <= max; i += step) {
-				std::string st_c_ = kw + std::to_string(i);
-				std::string u = Util::H1(st_c_);
-				fetch_pool.enqueue(lookup_job, st_c_, u);
-			}
-		};
-		
-		std::vector<std::thread> threads;
-    
-		unsigned n_threads = MAX_THREADS - 3;
-		
-
-		threads.push_back( std::thread(read_cache_job) );
-
-		for( int i = 1; i <= n_threads; i++) { // counter begin from 1 !
-			threads.push_back( std::thread(derive_job, i, uc, n_threads) );	
-		}
-
-		for( int i = 0; i <= n_threads; i++) { // counter begin from 1 !
-			threads[i].join();
-		}
-		
-		fetch_pool.join();
-		decrypt_pool.join();
-
- 		merge(cache_db, tw, cache_string + result_string);
-		// return result;
-	}*/
-
-	 void search_parallel_simple(std::string kw, std::string tw, int uc, int fetch_threads, std::unordered_set<std::string>& cache_ID, std::unordered_set<std::string>& result, std::string& cache_string, std::string& result_string) {
-		std::mutex res_mutex;
-	
-		auto fetch_job = [&kw, &tw, &res_mutex, &result, &result_string] ( int begin, int max, int step) {
-			 for(int i = begin; i <= max; i += step) {
-
-                                std::string st_c_ = kw + std::to_string(i);
-                                std::string u = Util::H1(st_c_);
-                                std::string e;
-
-                                bool found = get(ss_db, u, e);
-
-                                if(found) {
-					std::string value = Util::Xor( e, Util::H2(st_c_) );
-                        		std::string op, ind;
-                        		parse(value, op, ind);
-
-                       			if (step > 1) res_mutex.lock();
-                        			result.insert(Util::str2hex(ind));
-                        			result_string += Util::str2hex(ind) + "|";
-                       		 	if (step > 1) res_mutex.unlock();
-                                }else{
-                                        logger::log(logger::ERROR) << "We were supposed to find something!" << std::endl;
-                                }
-                        }
-
-		};
-
-		get(cache_db, tw, cache_string);
-	//	Util::split(cache_string, '|', cache_ID);	
-		std::vector<std::thread> threads;
-
-                for( int i = 1; i <= fetch_threads; i++) { // counter begin from 1 !
-                        threads.push_back( std::thread(fetch_job, i, uc, fetch_threads) );
-                }
-
-                for (auto& t : threads) {
-                        t.join();
-                }
-
-	}
-
-	void search_parallel(std::string kw, std::string tw, int uc, int decrypt_threads, std::unordered_set<std::string>& cache_ID, std::unordered_set<std::string>& result, std::string& cache_string, std::string& result_string){
-		// std::set<std::string> result;
-		//std::string cache_string, result_string;
-
-		std::mutex res_mutex;
-
-		ThreadPool decrypt_pool(decrypt_threads);
-
-		static double time = 0.0;
-	
-		auto read_cache_job = [&tw, &cache_ID, &res_mutex, &cache_string] ( ) {
-			cache_string = get(cache_db, tw);
-
-			//res_mutex.lock();		
-			//Util::split(cache_string, '|', cache_ID); //TODO
-			//res_mutex.unlock();		
-		};
-
-		auto decrypt_job = [&result_string, &result, &res_mutex, &decrypt_threads] (const std::string st_c_, const std::string e) {
-
-			std::string value = Util::Xor( e, Util::H2(st_c_) );
-			std::string op, ind;		
-			parse(value, op, ind);
-
-			if (decrypt_threads > 1) res_mutex.lock();
-			result.insert(Util::str2hex(ind));
-			result_string += Util::str2hex(ind) + "|";
-			if (decrypt_threads > 1) res_mutex.unlock();
-		};
-	
-		auto fetch_job = [&kw, &tw, &decrypt_job, &decrypt_pool]( const int begin, const int max, const int step) {
-
-			for(int i = begin; i <= max; i += step) {
-
-				std::string st_c_ = kw + std::to_string(i);
-				std::string u = Util::H1(st_c_);
-				std::string e;
-
-				bool found = get(ss_db, u, e);
-
-				if(found) {
-					decrypt_pool.enqueue(decrypt_job, st_c_, e);
-				}else{
-					logger::log(logger::ERROR) << "We were supposed to find something!" << std::endl;
-				}
-			}
-
-		};
-		
-		std::vector<std::thread> threads;
-    
-		unsigned n_threads = MAX_THREADS - decrypt_threads;
-
-		threads.push_back( std::thread(read_cache_job) );
-
-		for( int i = 1; i <= n_threads; i++) { // counter begin from 1 !
-			threads.push_back( std::thread(fetch_job, i, uc, n_threads) );	
-		}
-
-		for (auto& t : threads) {
-			t.join();
-		}
-		
-		decrypt_pool.join();
-
- 		//merge(cache_db, tw, cache_string + result_string);
-		// return result;
-	}
-
-
-	void search(std::string kw, std::string tw, int uc, std::set<std::string>& ID){
-	
-		std::vector<std::string> op_ind;
-
-		std::string ind, op;
-		std::string l, e, value;
-		std::string cache_ind;
-
-		int counter = 0;
-
-		struct timeval t1, t2;
-
-		double search_time;
-
-		try{
-			
-			gettimeofday(&t1, NULL);
-
-			std::string merge_string = get(cache_db, tw);
-			// Util::split(merge_string, '|', ID); // get all cached inds					
-			gettimeofday(&t2, NULL);
-
-			//std::string merge_string = cache_ind;
-			
-			if(kw != "") {
-
-				/*if (uc < 250) {
-
-					search_single( kw, 1, uc, ID, merge_string );
-	
-				}else */{
-										
-					//std::set<std::string> result_set;//[MAX_THREADS]; // result ID lists for storage nodes
-
-					std::vector<std::thread> threads;
-				
-					for (int i = 1; i <= MAX_THREADS; i++) {
-						threads.push_back( std::thread(search_task, kw, i, uc, MAX_THREADS, &ID));
-					}
-
-					// join theads
-					for (auto& t : threads) {
-						t.join();
-					}
-					gettimeofday(&t2, NULL);
-					merge(ID, merge_string);
-				}
-				// merge to cache can be done by a seperate thread backgroud, the result can be returned before.
-				// so we don't count the time...
-			}
-			
-			//gettimeofday(&t2, NULL);		
-
-			if (merge_string != "") {
-				int s = merge(cache_db, tw, merge_string);
-				assert(s == 0);
-			}
-
-			search_time =  ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 ;
-
-			search_log(kw, search_time, ID.size());
-
-
-		}catch(const std::exception& e)
-		{
-			std::cerr << "in Search() " << e.what()<< std::endl;
-			exit(1);
-		}
-	}
-
 
 	Status search(ServerContext *context, const SearchRequestMessage *request, ServerWriter <SearchReply> *writer) {
 		logger::log(logger::INFO) << "server: search(ServerContext *context, const SearchRequestMessage *request, ServerWriter <SearchReply> *writer)"<< std::endl;
@@ -522,6 +273,7 @@ public:
 		std::vector<std::string> P(request->c1() + 1);
 		std::unordered_set<std::string> Del;
 		std::unordered_set<std::string> R;
+		//std::vector<std::string> R;
 		std::unordered_set<std::string> Uts;
 		std::string ut; 
 		int i = request->c1();
@@ -534,6 +286,8 @@ public:
 		int c2 = request->c2();
 		std::string e;
 		std::string proof;
+		int count = 0;
+		P[0] = "#";
 		while(i>1){
 			ut = Util::H1(s_w + st);
 			Uts.insert(ut);
@@ -545,15 +299,26 @@ public:
 			st = M.substr(0,16);
 			std::string op = M.substr(16,1);
 			std::string id = M.substr(17,15);
+			std::cout<<"M:" << M<<std::endl;
+
+			//std::cout<<id<<std::endl;
 			//std::cout<<op<<std::endl;
+			// if(Del.find(id) == Del.end()){
+			// 	count ++;
+			// }
+			std::cout<< "id:" << id<<std::endl;
+		
+			// if(op == "1"){
+			// 	count ++;
+			// }
 			if(op == "1" && Del.find(id) == Del.end()){
 				R.insert(id);
+				//R.push_back(id);
 			}else if(op == "0"){
 				Del.insert(id);
 			}
 			i--;
 		}
-		std::cout<<R.size()<<std::endl;
 		//i = 1
 		ut = Util::H1(s_w + st);
 		Uts.insert(ut);
@@ -568,6 +333,7 @@ public:
 				std::string id = old_R.substr(i,15);
 				if(Del.find(id) == Del.end()){
 					R.insert(id);
+					//R.push_back(id);
 				}
 				number ++;
 			}	
@@ -576,8 +342,11 @@ public:
 			std::string M = Util::Xor(e,Util::H2(s_w + st));
 			std::string op = M.substr(16,1);
 			std::string id = M.substr(17,15);
+			
+			//std::cout<<op<<std::endl;
 			if(op == "1" && Del.find(id) == Del.end()){
 				R.insert(id);
+				//R.push_back(id);
 			}
 
 		}
@@ -589,40 +358,36 @@ public:
 			}
 		}
 		gettimeofday(&t2, NULL);
-		double search_time = ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0;
-
-		SearchReply reply;
-		for(auto iter_R = R.begin();iter_R != R.end();iter_R++){
-			reply.add_ind(*iter_R);
+		// std::cout<<count<<std::endl;
+		std::cout<<R.size()<<std::endl;
+		std::cout<<P.size()<<std::endl;
+		// for(auto iter_R = R.begin();iter_R != R.end();iter_R++){
+		// 	reply->add_ind(*iter_R);
+		// }
+		// for(auto iter_P = P.begin();iter_P != P.end();iter_P++){
+		// 	reply->add_proof(*iter_P);
+		// }
+		auto iter_R = R.begin();
+		auto iter_P = P.begin();
+		while(iter_R != R.end() || iter_P != P.end()){
+			SearchReply reply;
+			if(iter_R != R.end()){
+				reply.set_ind(*iter_R);
+				iter_R++;
+			}else{
+				reply.set_ind("");
+			}
+			if(iter_P != P.end()){
+				reply.set_proof(*iter_P);
+				iter_P++;
+			}else{
+				reply.set_proof("");
+			}
+			writer->Write(reply);
 		}
-		//int j = 0;
-		for(auto iter_P = P.begin();iter_P != P.end();iter_P++){
-			reply.add_proof(*iter_P);
-			// Util::print_bytes((unsigned char*)P[j].c_str(),P[j].length());
-			// j++;
-			// Util::print_bytes((unsigned char*)iter_P->c_str(),iter_P->length());
-		}
-		writer->Write(reply);
 		return Status::OK;
 	}
 	
-	// // update()实现单次更新操作
-	// Status update(ServerContext* context, const UpdateRequestMessage* request, ExecuteStatus* response) {
-	// 	std::string l = request->l();
-	// 	std::string e = request->e();
-	// 	//std::cout<<"in update(), counter:  "<< request->counter() <<std::endl;
-
-	// 	int status = store(ss_db, l, e);
-
-	// 	assert(status == 0);
-
-	// 	if(status != 0) {
-	// 		response->set_status(false);
-	// 		return Status::CANCELLED;
-	// 	}
-	// 	response->set_status(true);
-	// 	return Status::OK;
-	// }
 
 	Status ReProof(ServerContext* context, const ReProofRequestMessage *request,ExecuteStatus* response){
 		logger::log(logger::INFO) << "server ReProof(ServerContext* context, ServerReader<ReProofRequestMessage>* reader,ExecuteStatus* response)"<< std::endl;
@@ -690,8 +455,8 @@ std::mutex DistSSE::DistSSEServiceImpl::result_mtx;
 void RunServer(std::string db_path, std::string cache_path, int concurrent) {
 
 
-  std::string server_address("192.168.1.98:50051");
-  //std::string server_address("localhost:50051");
+  //std::string server_address("192.168.1.98:50051");
+  std::string server_address("0.0.0.0:50051");
   DistSSE::DistSSEServiceImpl service(db_path, cache_path, concurrent);
   
   ServerBuilder builder;
@@ -700,6 +465,7 @@ void RunServer(std::string db_path, std::string cache_path, int concurrent) {
   builder.RegisterService(&service);
 
   std::unique_ptr<Server> server(builder.BuildAndStart());
+
   DistSSE::logger::log(DistSSE::logger::INFO) << "Server listening on " << server_address << std::endl;
 
   server->Wait();

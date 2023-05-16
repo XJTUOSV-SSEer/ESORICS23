@@ -46,8 +46,8 @@ struct SearchRequestMessageDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT SearchRequestMessageDefaultTypeInternal _SearchRequestMessage_default_instance_;
 constexpr SearchReply::SearchReply(
   ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
-  : ind_()
-  , proof_(){}
+  : ind_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
+  , proof_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string){}
 struct SearchReplyDefaultTypeInternal {
   constexpr SearchReplyDefaultTypeInternal()
     : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
@@ -202,8 +202,8 @@ const char descriptor_table_protodef_DistSSE_2eproto[] PROTOBUF_SECTION_VARIABLE
   "f/empty.proto\")\n\023SetupRequestMessage\022\022\n\n"
   "setup_size\030\001 \001(\004\"G\n\024SearchRequestMessage"
   "\022\013\n\003s_w\030\001 \001(\014\022\n\n\002st\030\002 \001(\014\022\n\n\002c1\030\003 \001(\r\022\n\n"
-  "\002c2\030\004 \001(\r\")\n\013SearchReply\022\013\n\003ind\030\001 \003(\014\022\r\n"
-  "\005proof\030\002 \003(\014\"/\n\023CacheRequestMessage\022\n\n\002t"
+  "\002c2\030\004 \001(\r\")\n\013SearchReply\022\013\n\003ind\030\001 \001(\014\022\r\n"
+  "\005proof\030\002 \001(\014\"/\n\023CacheRequestMessage\022\n\n\002t"
   "w\030\001 \001(\014\022\014\n\004inds\030\002 \001(\014\"M\n\024UpdateRequestMe"
   "ssage\022\n\n\002ut\030\001 \001(\014\022\t\n\001e\030\002 \001(\014\022\r\n\005proof\030\003 "
   "\001(\014\022\017\n\007counter\030\004 \001(\004\"=\n\025ReProofRequestMe"
@@ -729,9 +729,7 @@ class SearchReply::_Internal {
 
 SearchReply::SearchReply(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned),
-  ind_(arena),
-  proof_(arena) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
   SharedCtor();
   if (!is_message_owned) {
     RegisterArenaDtor(arena);
@@ -739,14 +737,36 @@ SearchReply::SearchReply(::PROTOBUF_NAMESPACE_ID::Arena* arena,
   // @@protoc_insertion_point(arena_constructor:DistSSE.SearchReply)
 }
 SearchReply::SearchReply(const SearchReply& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      ind_(from.ind_),
-      proof_(from.proof_) {
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ind_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    ind_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_ind().empty()) {
+    ind_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_ind(), 
+      GetArenaForAllocation());
+  }
+  proof_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    proof_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_proof().empty()) {
+    proof_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_proof(), 
+      GetArenaForAllocation());
+  }
   // @@protoc_insertion_point(copy_constructor:DistSSE.SearchReply)
 }
 
 inline void SearchReply::SharedCtor() {
+ind_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  ind_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+proof_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  proof_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 SearchReply::~SearchReply() {
@@ -758,6 +778,8 @@ SearchReply::~SearchReply() {
 
 inline void SearchReply::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  ind_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  proof_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void SearchReply::ArenaDtor(void* object) {
@@ -776,8 +798,8 @@ void SearchReply::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  ind_.Clear();
-  proof_.Clear();
+  ind_.ClearToEmpty();
+  proof_.ClearToEmpty();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -787,31 +809,21 @@ const char* SearchReply::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID
     uint32_t tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // repeated bytes ind = 1;
+      // bytes ind = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
-          ptr -= 1;
-          do {
-            ptr += 1;
-            auto str = _internal_add_ind();
-            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-            CHK_(ptr);
-            if (!ctx->DataAvailable(ptr)) break;
-          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
+          auto str = _internal_mutable_ind();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // repeated bytes proof = 2;
+      // bytes proof = 2;
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
-          ptr -= 1;
-          do {
-            ptr += 1;
-            auto str = _internal_add_proof();
-            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-            CHK_(ptr);
-            if (!ctx->DataAvailable(ptr)) break;
-          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<18>(ptr));
+          auto str = _internal_mutable_proof();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
@@ -844,16 +856,16 @@ uint8_t* SearchReply::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // repeated bytes ind = 1;
-  for (int i = 0, n = this->_internal_ind_size(); i < n; i++) {
-    const auto& s = this->_internal_ind(i);
-    target = stream->WriteBytes(1, s, target);
+  // bytes ind = 1;
+  if (!this->_internal_ind().empty()) {
+    target = stream->WriteBytesMaybeAliased(
+        1, this->_internal_ind(), target);
   }
 
-  // repeated bytes proof = 2;
-  for (int i = 0, n = this->_internal_proof_size(); i < n; i++) {
-    const auto& s = this->_internal_proof(i);
-    target = stream->WriteBytes(2, s, target);
+  // bytes proof = 2;
+  if (!this->_internal_proof().empty()) {
+    target = stream->WriteBytesMaybeAliased(
+        2, this->_internal_proof(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -872,20 +884,18 @@ size_t SearchReply::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // repeated bytes ind = 1;
-  total_size += 1 *
-      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(ind_.size());
-  for (int i = 0, n = ind_.size(); i < n; i++) {
-    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
-      ind_.Get(i));
+  // bytes ind = 1;
+  if (!this->_internal_ind().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
+        this->_internal_ind());
   }
 
-  // repeated bytes proof = 2;
-  total_size += 1 *
-      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(proof_.size());
-  for (int i = 0, n = proof_.size(); i < n; i++) {
-    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
-      proof_.Get(i));
+  // bytes proof = 2;
+  if (!this->_internal_proof().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
+        this->_internal_proof());
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_cached_size_);
@@ -910,8 +920,12 @@ void SearchReply::MergeFrom(const SearchReply& from) {
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  ind_.MergeFrom(from.ind_);
-  proof_.MergeFrom(from.proof_);
+  if (!from._internal_ind().empty()) {
+    _internal_set_ind(from._internal_ind());
+  }
+  if (!from._internal_proof().empty()) {
+    _internal_set_proof(from._internal_proof());
+  }
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -928,9 +942,19 @@ bool SearchReply::IsInitialized() const {
 
 void SearchReply::InternalSwap(SearchReply* other) {
   using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ind_.InternalSwap(&other->ind_);
-  proof_.InternalSwap(&other->proof_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      &ind_, lhs_arena,
+      &other->ind_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      &proof_, lhs_arena,
+      &other->proof_, rhs_arena
+  );
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata SearchReply::GetMetadata() const {

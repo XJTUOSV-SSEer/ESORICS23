@@ -497,6 +497,7 @@ namespace DistSSE {
                 reply.set_ind(*i);
                 writer->Write(reply);
             }
+            writer->
             return Status::OK;
         }
 

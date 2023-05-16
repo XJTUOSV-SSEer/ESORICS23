@@ -42,8 +42,8 @@ message SearchRequestMessage
 
 message SearchReply
 {
-	repeated bytes ind = 1;
-    repeated bytes proof = 2;
+	bytes ind = 1;
+    bytes proof = 2;
 }
 
 message CacheRequestMessage

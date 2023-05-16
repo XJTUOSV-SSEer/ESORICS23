@@ -550,52 +550,32 @@ class SearchReply final :
     kIndFieldNumber = 1,
     kProofFieldNumber = 2,
   };
-  // repeated bytes ind = 1;
-  int ind_size() const;
-  private:
-  int _internal_ind_size() const;
-  public:
+  // bytes ind = 1;
   void clear_ind();
-  const std::string& ind(int index) const;
-  std::string* mutable_ind(int index);
-  void set_ind(int index, const std::string& value);
-  void set_ind(int index, std::string&& value);
-  void set_ind(int index, const char* value);
-  void set_ind(int index, const void* value, size_t size);
-  std::string* add_ind();
-  void add_ind(const std::string& value);
-  void add_ind(std::string&& value);
-  void add_ind(const char* value);
-  void add_ind(const void* value, size_t size);
-  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>& ind() const;
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>* mutable_ind();
+  const std::string& ind() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_ind(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_ind();
+  PROTOBUF_NODISCARD std::string* release_ind();
+  void set_allocated_ind(std::string* ind);
   private:
-  const std::string& _internal_ind(int index) const;
-  std::string* _internal_add_ind();
+  const std::string& _internal_ind() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_ind(const std::string& value);
+  std::string* _internal_mutable_ind();
   public:
 
-  // repeated bytes proof = 2;
-  int proof_size() const;
-  private:
-  int _internal_proof_size() const;
-  public:
+  // bytes proof = 2;
   void clear_proof();
-  const std::string& proof(int index) const;
-  std::string* mutable_proof(int index);
-  void set_proof(int index, const std::string& value);
-  void set_proof(int index, std::string&& value);
-  void set_proof(int index, const char* value);
-  void set_proof(int index, const void* value, size_t size);
-  std::string* add_proof();
-  void add_proof(const std::string& value);
-  void add_proof(std::string&& value);
-  void add_proof(const char* value);
-  void add_proof(const void* value, size_t size);
-  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>& proof() const;
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>* mutable_proof();
+  const std::string& proof() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_proof(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_proof();
+  PROTOBUF_NODISCARD std::string* release_proof();
+  void set_allocated_proof(std::string* proof);
   private:
-  const std::string& _internal_proof(int index) const;
-  std::string* _internal_add_proof();
+  const std::string& _internal_proof() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_proof(const std::string& value);
+  std::string* _internal_mutable_proof();
   public:
 
   // @@protoc_insertion_point(class_scope:DistSSE.SearchReply)
@@ -605,8 +585,8 @@ class SearchReply final :
   template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> ind_;
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> proof_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr ind_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr proof_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_DistSSE_2eproto;
 };
@@ -1481,154 +1461,106 @@ inline void SearchRequestMessage::set_c2(uint32_t value) {
 
 // SearchReply
 
-// repeated bytes ind = 1;
-inline int SearchReply::_internal_ind_size() const {
-  return ind_.size();
-}
-inline int SearchReply::ind_size() const {
-  return _internal_ind_size();
-}
+// bytes ind = 1;
 inline void SearchReply::clear_ind() {
-  ind_.Clear();
+  ind_.ClearToEmpty();
 }
-inline std::string* SearchReply::add_ind() {
-  std::string* _s = _internal_add_ind();
-  // @@protoc_insertion_point(field_add_mutable:DistSSE.SearchReply.ind)
+inline const std::string& SearchReply::ind() const {
+  // @@protoc_insertion_point(field_get:DistSSE.SearchReply.ind)
+  return _internal_ind();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void SearchReply::set_ind(ArgT0&& arg0, ArgT... args) {
+ 
+ ind_.SetBytes(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:DistSSE.SearchReply.ind)
+}
+inline std::string* SearchReply::mutable_ind() {
+  std::string* _s = _internal_mutable_ind();
+  // @@protoc_insertion_point(field_mutable:DistSSE.SearchReply.ind)
   return _s;
 }
-inline const std::string& SearchReply::_internal_ind(int index) const {
-  return ind_.Get(index);
+inline const std::string& SearchReply::_internal_ind() const {
+  return ind_.Get();
 }
-inline const std::string& SearchReply::ind(int index) const {
-  // @@protoc_insertion_point(field_get:DistSSE.SearchReply.ind)
-  return _internal_ind(index);
+inline void SearchReply::_internal_set_ind(const std::string& value) {
+  
+  ind_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArenaForAllocation());
 }
-inline std::string* SearchReply::mutable_ind(int index) {
-  // @@protoc_insertion_point(field_mutable:DistSSE.SearchReply.ind)
-  return ind_.Mutable(index);
+inline std::string* SearchReply::_internal_mutable_ind() {
+  
+  return ind_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArenaForAllocation());
 }
-inline void SearchReply::set_ind(int index, const std::string& value) {
-  ind_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set:DistSSE.SearchReply.ind)
+inline std::string* SearchReply::release_ind() {
+  // @@protoc_insertion_point(field_release:DistSSE.SearchReply.ind)
+  return ind_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArenaForAllocation());
 }
-inline void SearchReply::set_ind(int index, std::string&& value) {
-  ind_.Mutable(index)->assign(std::move(value));
-  // @@protoc_insertion_point(field_set:DistSSE.SearchReply.ind)
-}
-inline void SearchReply::set_ind(int index, const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  ind_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set_char:DistSSE.SearchReply.ind)
-}
-inline void SearchReply::set_ind(int index, const void* value, size_t size) {
-  ind_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:DistSSE.SearchReply.ind)
-}
-inline std::string* SearchReply::_internal_add_ind() {
-  return ind_.Add();
-}
-inline void SearchReply::add_ind(const std::string& value) {
-  ind_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add:DistSSE.SearchReply.ind)
-}
-inline void SearchReply::add_ind(std::string&& value) {
-  ind_.Add(std::move(value));
-  // @@protoc_insertion_point(field_add:DistSSE.SearchReply.ind)
-}
-inline void SearchReply::add_ind(const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  ind_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add_char:DistSSE.SearchReply.ind)
-}
-inline void SearchReply::add_ind(const void* value, size_t size) {
-  ind_.Add()->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_add_pointer:DistSSE.SearchReply.ind)
-}
-inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>&
-SearchReply::ind() const {
-  // @@protoc_insertion_point(field_list:DistSSE.SearchReply.ind)
-  return ind_;
-}
-inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
-SearchReply::mutable_ind() {
-  // @@protoc_insertion_point(field_mutable_list:DistSSE.SearchReply.ind)
-  return &ind_;
+inline void SearchReply::set_allocated_ind(std::string* ind) {
+  if (ind != nullptr) {
+    
+  } else {
+    
+  }
+  ind_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ind,
+      GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (ind_.IsDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited())) {
+    ind_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:DistSSE.SearchReply.ind)
 }
 
-// repeated bytes proof = 2;
-inline int SearchReply::_internal_proof_size() const {
-  return proof_.size();
-}
-inline int SearchReply::proof_size() const {
-  return _internal_proof_size();
-}
+// bytes proof = 2;
 inline void SearchReply::clear_proof() {
-  proof_.Clear();
+  proof_.ClearToEmpty();
 }
-inline std::string* SearchReply::add_proof() {
-  std::string* _s = _internal_add_proof();
-  // @@protoc_insertion_point(field_add_mutable:DistSSE.SearchReply.proof)
+inline const std::string& SearchReply::proof() const {
+  // @@protoc_insertion_point(field_get:DistSSE.SearchReply.proof)
+  return _internal_proof();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void SearchReply::set_proof(ArgT0&& arg0, ArgT... args) {
+ 
+ proof_.SetBytes(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:DistSSE.SearchReply.proof)
+}
+inline std::string* SearchReply::mutable_proof() {
+  std::string* _s = _internal_mutable_proof();
+  // @@protoc_insertion_point(field_mutable:DistSSE.SearchReply.proof)
   return _s;
 }
-inline const std::string& SearchReply::_internal_proof(int index) const {
-  return proof_.Get(index);
+inline const std::string& SearchReply::_internal_proof() const {
+  return proof_.Get();
 }
-inline const std::string& SearchReply::proof(int index) const {
-  // @@protoc_insertion_point(field_get:DistSSE.SearchReply.proof)
-  return _internal_proof(index);
+inline void SearchReply::_internal_set_proof(const std::string& value) {
+  
+  proof_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArenaForAllocation());
 }
-inline std::string* SearchReply::mutable_proof(int index) {
-  // @@protoc_insertion_point(field_mutable:DistSSE.SearchReply.proof)
-  return proof_.Mutable(index);
+inline std::string* SearchReply::_internal_mutable_proof() {
+  
+  return proof_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArenaForAllocation());
 }
-inline void SearchReply::set_proof(int index, const std::string& value) {
-  proof_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set:DistSSE.SearchReply.proof)
+inline std::string* SearchReply::release_proof() {
+  // @@protoc_insertion_point(field_release:DistSSE.SearchReply.proof)
+  return proof_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArenaForAllocation());
 }
-inline void SearchReply::set_proof(int index, std::string&& value) {
-  proof_.Mutable(index)->assign(std::move(value));
-  // @@protoc_insertion_point(field_set:DistSSE.SearchReply.proof)
-}
-inline void SearchReply::set_proof(int index, const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  proof_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set_char:DistSSE.SearchReply.proof)
-}
-inline void SearchReply::set_proof(int index, const void* value, size_t size) {
-  proof_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:DistSSE.SearchReply.proof)
-}
-inline std::string* SearchReply::_internal_add_proof() {
-  return proof_.Add();
-}
-inline void SearchReply::add_proof(const std::string& value) {
-  proof_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add:DistSSE.SearchReply.proof)
-}
-inline void SearchReply::add_proof(std::string&& value) {
-  proof_.Add(std::move(value));
-  // @@protoc_insertion_point(field_add:DistSSE.SearchReply.proof)
-}
-inline void SearchReply::add_proof(const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  proof_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add_char:DistSSE.SearchReply.proof)
-}
-inline void SearchReply::add_proof(const void* value, size_t size) {
-  proof_.Add()->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_add_pointer:DistSSE.SearchReply.proof)
-}
-inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>&
-SearchReply::proof() const {
-  // @@protoc_insertion_point(field_list:DistSSE.SearchReply.proof)
-  return proof_;
-}
-inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
-SearchReply::mutable_proof() {
-  // @@protoc_insertion_point(field_mutable_list:DistSSE.SearchReply.proof)
-  return &proof_;
+inline void SearchReply::set_allocated_proof(std::string* proof) {
+  if (proof != nullptr) {
+    
+  } else {
+    
+  }
+  proof_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), proof,
+      GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (proof_.IsDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited())) {
+    proof_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:DistSSE.SearchReply.proof)
 }
 
 // -------------------------------------------------------------------

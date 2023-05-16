@@ -1,0 +1,1 @@
+./rpc_server ./database/my.sdb ./database/my.scadb 1 benchmark_server.out

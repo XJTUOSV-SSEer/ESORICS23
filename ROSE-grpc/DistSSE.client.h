@@ -595,9 +595,20 @@ namespace DistSSE {
             logger::log(logger::INFO) << "client search_rose(const std::string w):  " << std::endl;
             string tpd_L, tpd_T, L, R, D, C;
             //search stage 1: generate trapdoor
+            struct timeval t1,t2;
+            gettimeofday(&t1, NULL);
             trapdoor(w, tpd_L, tpd_T, L, R, D, C);
             //search stage 2: find cipehrtexts
             search(tpd_L, tpd_T, L, R, D, C);
+            gettimeofday(&t2, NULL);
+            //输出到日志文件
+            logger::log_benchmark()<<"update time: "
+                               << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+                               << std::endl;
+            //输出到终端
+            logger::log(logger::INFO)<<"update time: "
+                                 << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+                                 << std::endl;
             return "OK";
         }
 

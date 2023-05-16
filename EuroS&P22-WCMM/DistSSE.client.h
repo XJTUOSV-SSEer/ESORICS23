@@ -310,17 +310,28 @@ public:
 
 			std::string s_w = gen_enc_token(w,k_s,iv_s);
 			c1++;
-			std::string st = gen_enc_token(w+std::to_string(c1)+std::to_string(c2),k_t,iv_t);
+			// std::string st = gen_enc_token(w+std::to_string(c1)+std::to_string(c2),k_t,iv_t);
+			std::string st = Util::H1(w+std::to_string(c1)+std::to_string(c2));
+			// std::cout<<st1<<std::endl;
 			st = st.substr(0,16);
+			// if(st.length() > 16){
+			// 	st = st.substr(8,16);
+			// }
 			//std::cout<<"c1:"<<c1<<std::endl;
 			if(c1 == 1){
 				//std::cout<<Util::H2(s_w + st).length()<<std::endl;
 				std::string zero = std::string(16,'0');
+				// std::cout << "test_size:" << zero + op + ind << std::endl;
 				e = Util::Xor(Util::H2(s_w + st),zero + op + ind);
 			}else{
-				std::string oldst = gen_enc_token(w + std::to_string(c1 - 1) + std::to_string(c2),k_t,iv_t);
+				std::string oldst = Util::H1(w+std::to_string(c1-1)+std::to_string(c2));
 				oldst = oldst.substr(0,16);
-				std::cout<<oldst.length()<<std::endl;//为什么前100个长度是16，后面都是32？
+				// std::string oldst = gen_enc_token(w + std::to_string(c1 - 1) + std::to_string(c2),k_t,iv_t);
+				// if(st.length() > 16){
+				// 	oldst = oldst.substr(8,16);
+				// }
+				// std::cout << "test_size:" << zero + op + ind << std::endl;
+				//std::cout<<oldst.length()<<std::endl;//为什么前100个长度是16，后面都是32？
 				e = Util::Xor(Util::H2(s_w + st),oldst + op + ind);
 			}
 			std::string k_w = gen_enc_token(w + std::to_string(c2), k_p, iv_p);
@@ -369,9 +380,14 @@ public:
 			}
 			int c1 = WC1[w];
 			int c2 = WC2[w];
-			std::string st = gen_enc_token(w + std::to_string(c1) + std::to_string(c2) , k_t ,iv_t);
+			// std::string st = gen_enc_token(w + std::to_string(c1) + std::to_string(c2) , k_t ,iv_t);
+			std::string st = Util::H1(w+std::to_string(c1)+std::to_string(c2));
+			// std::cout<<st1<<std::endl;
 			st = st.substr(0,16);
-
+			// if(st.length() > 16){
+			// 	st = st.substr(8,16);
+			// }
+		
 			request.set_s_w(s_w);
 			request.set_st(st);
 			request.set_c1(c1);
@@ -443,34 +459,30 @@ public:
 		// 执行RPC操作，返回类型为 std::unique_ptr<ClientReaderInterface<SearchReply>>
 		struct timeval t1,t2;
 		gettimeofday(&t1, NULL);
+		SearchReply reply;
 		std::unique_ptr<ClientReaderInterface<SearchReply>> reader = stub_->search(&context, request);
 		// 读取返回列表
 		int counter = 0;
-		SearchReply reply;
 		std::vector<std::string> P;
 		std::unordered_set<std::string> R;
-		reader->Read(&reply);
-		for(int i=0;i<reply.proof_size();i++){
-			//Util::print_bytes((unsigned char*)reply.proof(i).c_str(),reply.proof(i).length());
-			P.push_back(reply.proof(i));
-		}
-		//std::cout<<reply.ind_size()<<std::endl;
-		for(int i=0;i<reply.ind_size();i++){
-			R.insert(reply.ind(i));
-			counter++;
-		}
-		//verify
-		std::cout<<"P: "<<P.size()<<std::endl;
-		std::cout<<"R: "<<R.size()<<std::endl;
-		if(verify(P,R,w) == "Reject"){
-			return "Reject";
-		}else{
-			//std::cout<< "test" <<std::endl;
-			if(P.size() -1 <= R.size()){
-				logger::log(logger::INFO) << " search result: "<< counter<< std::endl;
-			}else{
-				ReProof(R,w);
-				logger::log(logger::INFO) << " search result: "<< counter<< std::endl;
+		//std::vector<std::string> R;
+		//std::cout<<reply.proof_size()<<std::endl;
+		// for(int i=0;i<reply.proof_size();i++){
+		// 	//Util::print_bytes((unsigned char*)reply.proof(i).c_str(),reply.proof(i).length());
+		// 	P.push_back(reply.proof(i));
+		// }
+		// //std::cout<<reply.ind_size()<<std::endl;
+		// for(int i=0;i<reply.ind_size();i++){
+		// 	R.insert(reply.ind(i));
+		// 	counter++;
+		// }
+		while(reader->Read(&reply)){
+			if(reply.ind() != ""){
+				R.insert(reply.ind());
+				//R.push_back(reply.ind());
+			}
+			if(reply.proof() != ""){
+				P.push_back(reply.proof());
 			}
 		}
 		gettimeofday(&t2, NULL);
@@ -482,6 +494,41 @@ public:
 		logger::log(logger::INFO)<<"search time: "
 								<< ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
 								<< std::endl;
+		//verify
+		std::cout<<"P: "<<P.size()<<std::endl;
+		std::cout<<"R: "<<R.size()<<std::endl;
+
+		struct timeval t3,t4;
+		gettimeofday(&t3, NULL);
+		
+
+		if(verify(P,R,w) == "Reject"){
+			return "Reject";
+		}else{
+			//std::cout<< "test" <<std::endl;
+			if(P.size() -1 <= R.size()){
+				logger::log(logger::INFO) << " search result: "<< counter<< std::endl;
+			}else{
+				ReProof(R,w);
+				logger::log(logger::INFO) << " search result: "<< counter<< std::endl;
+			}
+		}
+		gettimeofday(&t4, NULL);
+		logger::log_benchmark()<<"verify time: "
+							<< ((t4.tv_sec - t3.tv_sec) * 1000000.0 + t4.tv_usec - t3.tv_usec) / 1000.0 << " ms"
+							<< std::endl;
+		//输出到终端
+		logger::log(logger::INFO)<<"verify time: "
+								<< ((t4.tv_sec - t3.tv_sec) * 1000000.0 + t4.tv_usec - t3.tv_usec) / 1000.0 << " ms"
+								<< std::endl;
+		
+		logger::log_benchmark()<<"total time: "
+							<< ((t4.tv_sec - t1.tv_sec) * 1000000.0 + t4.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+							<< std::endl;
+		//输出到终端
+		logger::log(logger::INFO)<<"total time: "
+								<< ((t4.tv_sec - t1.tv_sec) * 1000000.0 + t4.tv_usec - t1.tv_usec) / 1000.0 << " ms"
+								<< std::endl;
 		return "Accept";
 	}
 
@@ -491,7 +538,13 @@ public:
 		int c2 = WC2[w];
 		c1 = 1;
 		c2 ++;
-		std::string st = gen_enc_token(w + std::to_string(c1) + std::to_string(c2), k_t, iv_t);
+		// std::string st = gen_enc_token(w + std::to_string(c1) + std::to_string(c2), k_t, iv_t);
+		std::string st = Util::H1(w+std::to_string(c1)+std::to_string(c2));
+			// std::cout<<st1<<std::endl;
+		st = st.substr(0,16);
+		// if(st.length() > 16){
+		// 	st = st.substr(8,16);
+		// }
 		// std::cout<<"st: ";
 		// Util::print_bytes((unsigned char*)st.c_str(),st.length());
 		std::string R_str = "";

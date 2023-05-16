@@ -264,6 +264,7 @@ namespace DistSSE {
         }
         return res;
     }
+
     
     static void generation_job_2(Client *client, std::string keyword, unsigned int thread_id, size_t N_entries) {
         srand(time(NULL));
@@ -279,15 +280,15 @@ namespace DistSSE {
         std::unique_ptr <ClientWriterInterface<UpdateRequestMessage>> writer(stub_->batch_update_rose(&context, &exec_status)); //batch_update是流式传输
         string L, R, D, C;
         for (size_t i = 0; i < N_entries; i++) {
-            prng.GenerateBlock(tmp, sizeof(tmp));
+            //prng.GenerateBlock(tmp, sizeof(tmp));
             //随机生成ind
-            std::string name = std::string((const char *) tmp, ind_len);//字符串不是16进制的
-            int int_name = string_to_int(name);
+            //std::string name = std::string((const char *) tmp, ind_len);//字符串不是16进制的
+            //int int_name = string_to_int(name);
             //存在client
-            client->encrypt(L, R, D, C, op_add , keyword, int_name);
+            client->encrypt(L, R, D, C, op_add , keyword, i);
             //发给server
             writer->Write(client->gen_update_request_rose(L,R,D,C));
-            double random = rand() % (1000) / (double)(1000);
+            //double random = rand() % (1000) / (double)(1000);
             // if(random < 1.0){
 			// 	client->encrypt(L, R, D, C, op_del, keyword, int_name);
             //     writer->Write(client->gen_update_request_rose(L,R,D,C));
@@ -440,12 +441,13 @@ namespace DistSSE {
     }
 
     //flag = 0:del,flag = 1:add
-    void update_rose(Client &client,size_t N_entries,std::string keyword, unsigned int n_threads,int flag){
+    void update_rose(Client &client,size_t N_entries,std::string keyword, unsigned int n_threads,int flag,double deleteRatio){
         logger::log(logger::INFO) << "update_rose" << std::endl;
         std::vector <std::thread> threads;
         // std::mutex rpc_mutex;
         struct timeval t1, t2;
         gettimeofday(&t1, NULL);
+        N_entries = N_entries * deleteRatio;
         int numOfEntries1 = N_entries / n_threads;
         int numOfEntries2 = N_entries / n_threads + N_entries % n_threads;
         for (unsigned int i = 0; i < n_threads - 1; i++) {

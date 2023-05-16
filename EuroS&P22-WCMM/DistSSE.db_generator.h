@@ -27,22 +27,36 @@ namespace DistSSE{
 				std::cout << word + "\t" + std::to_string(counter)<< std::endl;
 		}
 
+		static void padd(std::string& input,int length){
+			if(input.length() < length){
+				std::string pad(length - input.length(),'#');
+				std::cout<<"pad:"<<pad<<std::endl;
+				input = pad + input;
+				std::cout<<"padd:"<<input<<std::endl;
+			}
+		}
+
 		static void generation_job_Euro(Client* client,std::string keyword, unsigned int thread_id, size_t N_entries,double deleteRatio){
 			srand(time(NULL));
 			struct timeval t1, t2;
 			//std::string id_string = std::to_string(thread_id);
 			CryptoPP::AutoSeededRandomPool prng;
 			int ind_len = AES::BLOCKSIZE - 1 ; // AES::BLOCKSIZE = 16
+			std::unordered_set<std::string> s;
 			byte tmp[ind_len];
 			// for gRPC
 			UpdateRequestMessage request;
 			ClientContext context;
 			ExecuteStatus exec_status;
-			std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials())));
+			std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("0.0.0.0:50051", grpc::InsecureChannelCredentials())));
 			std::unique_ptr <ClientWriterInterface<UpdateRequestMessage>> writer(stub_->batch_update(&context, &exec_status));
 			for (size_t i = 0; i < N_entries; i++) {
 				prng.GenerateBlock(tmp, sizeof(tmp));
-				std::string ind = /*Util.str2hex*/(std::string((const char *) tmp, ind_len));
+				//std::string ind = Util::str2hex(std::string((const char *) tmp, ind_len));
+				std::string ind = std::to_string(i);
+				padd(ind,ind_len);
+				std::cout<<ind<<std::endl;
+				s.insert(ind);
 				double random = rand() % (1000) / (double)(1000);
 				//std::cout<<random<<std::endl;
 				writer->Write(client->gen_update_request("1", keyword, ind));
@@ -50,6 +64,7 @@ namespace DistSSE{
 					writer->Write(client->gen_update_request("0", keyword, ind));
 				}
 			}
+			std::cout<<s.size()<<std::endl;
 			// now tell server we have finished
 			writer->WritesDone();
 			Status status = writer->Finish();
@@ -102,7 +117,7 @@ namespace DistSSE{
 
 		// 	ExecuteStatus exec_status;
 	
-		// 	std::unique_ptr<RPC::Stub> stub_(RPC::NewStub( grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()) ) );
+		// 	std::unique_ptr<RPC::Stub> stub_(RPC::NewStub( grpc::CreateChannel("0.0.0.0:50051", grpc::InsecureChannelCredentials()) ) );
 
 		// 	std::unique_ptr<ClientWriterInterface<UpdateRequestMessage>> writer(stub_->batch_update(&context, &exec_status));
 		
@@ -279,15 +294,18 @@ namespace DistSSE{
 			UpdateRequestMessage request;
 			ClientContext context;
 			ExecuteStatus exec_status;
-			std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials())));
+			std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("0.0.0.0:50051", grpc::InsecureChannelCredentials())));
 			std::unique_ptr <ClientWriterInterface<UpdateRequestMessage>> writer(stub_->batch_update(&context, &exec_status));
+			std::unordered_set<std::string> s;
 			for (size_t i = 0; i < N_entries; i++) {
 				prng.GenerateBlock(tmp, sizeof(tmp));
 				std::string ind = /*Util.str2hex*/(std::string((const char *) tmp, ind_len));
+				s.insert(ind);
 				writer->Write(client->gen_update_request("0", keyword, ind));
 			}
 			// now tell server we have finished
 			writer->WritesDone();
+			std::cout<<s.size()<<std::endl;
 			Status status = writer->Finish();
 			std::string log = "Random DB delete: thread " + std::to_string(thread_id) + " completed: " + std::to_string(N_entries) + " keyword-filename";
 			logger::log(logger::INFO) << log << std::endl;

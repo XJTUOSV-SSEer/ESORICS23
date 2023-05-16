@@ -494,7 +494,7 @@ namespace DistSSE {
                 if (buf3[0] == 0xf0) // del
                 {
                     L_cache.erase(s_L1);
-
+                    
                     //_store.erase(s_L1);
                     delete_entry(ss_db,"R"+s_L1);
                     delete_entry(ss_db,"D"+s_L1);
@@ -505,17 +505,26 @@ namespace DistSSE {
                     s_tmp.assign((const char *) buf3 + 1, 33);
                     D.emplace_back(s_tmp);
 
+                    std::cout<<"test2"<<std::endl;
                     Xor(32, (const unsigned char *) s_L1t.c_str(), (const unsigned char *) buf3 + 1 + 33, buf2);
+                    std::cout<<"test4"<<std::endl;
                     Xor(32, (const unsigned char *) s_T1t.c_str(), (const unsigned char *) buf3 + 1 + 33 + 32, buf2 + 32);
+                    std::cout<<"test5"<<std::endl;
                     Xor(64, buf_Dt + 1 + 33, buf2, buf_Dt + 1 + 33);
+                    std::cout<<"test6"<<std::endl;
 
                     //cip = _store[s_Lt];
                     cip = new Cipher;
                     memcpy(cip->R, get(ss_db,"R"+s_Lt).c_str(), 16);
+                    std::cout<<"test7"<<std::endl;
                     memcpy(cip->D, get(ss_db,"D"+s_Lt).c_str(), 1 + 33 + 32 * 2);
+                    std::cout<<"test8"<<std::endl;
                     memcpy(cip->C, get(ss_db,"C"+s_Lt).c_str(), CIPHER_SIZE);
+                    std::cout<<"test9"<<std::endl;
                     memcpy(cip->D, buf_Dt, 1 + 32 * 2 + 33);
+                    std::cout<<"test10"<<std::endl;
 
+                    //
                     //update!!!
                     store(ss_db,"D"+s_Lt, (char*)cip->D);
 

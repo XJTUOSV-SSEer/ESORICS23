@@ -37,12 +37,12 @@ int main(int argc, char **argv) {
         //update_add
         string keyword = std::string(argv[4]);
         int N_entries = stoi(std::string(argv[5]));
-        DistSSE::update_rose(client,N_entries,keyword,threads_num,1);
+        DistSSE::update_rose(client,N_entries,keyword,threads_num,1,1);
     }else if(argc == 7 && flag == 4){
         //update_del
         string keyword = std::string(argv[4]);
         int N_entries = stoi(std::string(argv[5]));
-        DistSSE::update_rose(client,N_entries,keyword,threads_num,0);
+        DistSSE::update_rose(client,N_entries,keyword,threads_num,0,0.3);
     }else if(argc == 7 && flag == 1){
         string keyword = std::string(argv[4]);
         int N_entries = stoi(std::string(argv[5]));
