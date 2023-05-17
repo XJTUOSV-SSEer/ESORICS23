@@ -42,7 +42,8 @@ namespace DistSSE {
         int MAX_THREADS;
         static std::mutex result_mtx;
         //static std::mutex cache_write_mtx;
-        int N = 131072; //2^17
+        //int N = 16384; //2^14
+        int N = 1024; //2^10
         bytes<Key> key{0};
         OMAP* OD_del;
         OMAP* OD_tree;
@@ -204,16 +205,16 @@ namespace DistSSE {
             T.push(make_pair(sn,cnt_d));
             KUPRF kuprf;
             unsigned char buf_L[256];
-            string C;
             string L;
+            string C;
             string D;
             //int i = 0;
             while(T.size() != 0){
                 //i++;
                 int n = T.front().first;
-                //cout<<"n:"<<n<<endl;
+                cout<<"n:"<<n<<endl;
                 int num = T.front().second;
-                //cout<<"num:"<<num<<endl;
+                cout<<"num:"<<num<<endl;
                 T.pop();
                 kuprf.Eval(buf_L, (unsigned char*)K_u.c_str(), Util::H1(tk+std::to_string(n)+std::to_string(num)));
                 L.assign((char*)buf_L,33);
@@ -251,6 +252,7 @@ namespace DistSSE {
                     kuprf.Eval(buf_L, (unsigned char*)K_u.c_str(), hash);
                     L.assign((char*) buf_L, 33);
                     M.push_back(make_pair(L,hash));
+                    get(ss_db, L, C);
                     R.push_back(C);
                 }else{
                     int h = get_h(n);
@@ -259,20 +261,23 @@ namespace DistSSE {
                     if(cnt_i < rln){
                         rln = cnt_i;
                     }
-                    string lastL;
-                    for(int k = rln;k<=lln;k++){
+                    for(int k = rln;k>=lln;k--){
                         string hash = Util::H1(tk + to_string(k) + "1");
                         if(k == rln){
                             kuprf.Eval(buf_L, (unsigned char*)K_u.c_str(), hash);
                             L.assign((char*) buf_L, 33);
                             M.push_back(make_pair(L,hash));
                             get(ss_db,"d" + L, D);
+                            get(ss_db, L, C);
                         }else{
                             M.push_back(make_pair(L,hash));
-                            get(ss_db,"d" + lastL, D);
-                            get(ss_db, lastL, C);
+                            get(ss_db,"d" + L, D);
+                            get(ss_db, L, C);
                         }
-                        lastL = Util::Xor(D,hash + "0");
+                        // cout<<k<<"-L:"<<Util::str2hex(L)<<endl;
+                        // cout<<k<<"-D:"<<Util::str2hex(D)<<endl;
+                        L = Util::Xor(D,hash + "0");
+                        // cout<<k<<"-C:"<<Util::str2hex(C)<<endl;
                         R.push_back(C);
                     }
                 }
@@ -282,11 +287,11 @@ namespace DistSSE {
                 reply.set_c(*i);
                 writer->Write(reply);
             }
-            ReUpdate(M,delta_k);
+            //ReUpdate(M,delta_k,kuprf);
             return Status::OK;
         }
 
-        void ReUpdate(vector<pair<string,string>> M,string delta_k){
+        void ReUpdate(vector<pair<string,string>> M,string delta_k,KUPRF kuprf){
             unsigned char buf_L[256];
             for(int i=0;i<M.size();i++){
                 string L = M[i].first;
@@ -297,10 +302,11 @@ namespace DistSSE {
                 get(ss_db,"d" + L,D);
                 kuprf.update(buf_L, (unsigned char*)delta_k.c_str(),(unsigned char*)L.c_str());
                 delete_entry(ss_db,L);
-                L.assign(buf_L,33);
+                delete_entry(ss_db,"d" + L);
+                L.assign((char*)buf_L,33);
                 kuprf.update(buf_L, (unsigned char*)delta_k.c_str(),(unsigned char*)(Util::Xor(D,U + "0")).c_str());
                 string temp;
-                temp.assign(buf_L,33);
+                temp.assign((char*)buf_L,33);
                 D = Util::Xor(temp, U + "0");
                 store(ss_db, "d" + L, D);
                 store(ss_db, L, C);
@@ -517,7 +523,6 @@ namespace DistSSE {
                 reply.set_ind(*i);
                 writer->Write(reply);
             }
-            writer->
             return Status::OK;
         }
 
@@ -549,8 +554,10 @@ namespace DistSSE {
                 L = request.l();
                 C = request.c();
                 D = request.d();
+                cout<<"test1"<<endl;
                 store(ss_db, L, C);
-                store(ss_db, "d"+L, D);
+                cout<<"test2"<<endl;
+                store(ss_db, "d"+ L, D);
             }
             response->set_status(true);
             return Status::OK;
@@ -563,7 +570,7 @@ namespace DistSSE {
             std::string d = request->d();
             logger::log(logger::INFO) << "server update_Rose_2(ServerContext *context, const UpdateRequestMessage_Rose_2 *request, ExecuteStatus *response): "<< std::endl;
             int status1 = store(ss_db, l, c);
-            int status2 = store(ss_db, "d" + l, c);
+            int status2 = store(ss_db, "d" + l, d);
             //assert(status == 0);
             if (status1 != 0 || status2 != 0) {
                 response->set_status(false);
@@ -624,7 +631,7 @@ namespace DistSSE {
                 }else{
                     value = OD_tree->find(key_OD);
                 }
-                //cout<<"得到value:"<<value<<endl;
+                cout<<"准备发送value:"<<value<<endl;
                 reply->add_value(value);
             }
             return Status::OK;
@@ -636,6 +643,7 @@ namespace DistSSE {
             while(reader->Read(&request)){
                 Bid key_OD = Utilities::getBid(request.w() + "#" + request.idorn());
                 //cout<<"收到key:("<<request.w() + "," + request.idorn() + ")" <<endl;
+                cout<<"收到value:"<<request.value()<<endl;
                 if(request.flag() == 0){
                     OD_del->insert(key_OD,request.value());
                 }else{

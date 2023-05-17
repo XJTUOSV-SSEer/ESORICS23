@@ -1114,6 +1114,7 @@ class UpdateRequestMessage_Rose_2 final :
   enum : int {
     kLFieldNumber = 1,
     kCFieldNumber = 2,
+    kDFieldNumber = 3,
   };
   // bytes L = 1;
   void clear_l();
@@ -1143,6 +1144,20 @@ class UpdateRequestMessage_Rose_2 final :
   std::string* _internal_mutable_c();
   public:
 
+  // bytes D = 3;
+  void clear_d();
+  const std::string& d() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_d(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_d();
+  PROTOBUF_NODISCARD std::string* release_d();
+  void set_allocated_d(std::string* d);
+  private:
+  const std::string& _internal_d() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_d(const std::string& value);
+  std::string* _internal_mutable_d();
+  public:
+
   // @@protoc_insertion_point(class_scope:DistSSE.UpdateRequestMessage_Rose_2)
  private:
   class _Internal;
@@ -1152,6 +1167,7 @@ class UpdateRequestMessage_Rose_2 final :
   typedef void DestructorSkippable_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr l_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr c_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr d_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_DistSSE_2eproto;
 };
@@ -3260,6 +3276,57 @@ inline void UpdateRequestMessage_Rose_2::set_allocated_c(std::string* c) {
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:DistSSE.UpdateRequestMessage_Rose_2.C)
+}
+
+// bytes D = 3;
+inline void UpdateRequestMessage_Rose_2::clear_d() {
+  d_.ClearToEmpty();
+}
+inline const std::string& UpdateRequestMessage_Rose_2::d() const {
+  // @@protoc_insertion_point(field_get:DistSSE.UpdateRequestMessage_Rose_2.D)
+  return _internal_d();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void UpdateRequestMessage_Rose_2::set_d(ArgT0&& arg0, ArgT... args) {
+ 
+ d_.SetBytes(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:DistSSE.UpdateRequestMessage_Rose_2.D)
+}
+inline std::string* UpdateRequestMessage_Rose_2::mutable_d() {
+  std::string* _s = _internal_mutable_d();
+  // @@protoc_insertion_point(field_mutable:DistSSE.UpdateRequestMessage_Rose_2.D)
+  return _s;
+}
+inline const std::string& UpdateRequestMessage_Rose_2::_internal_d() const {
+  return d_.Get();
+}
+inline void UpdateRequestMessage_Rose_2::_internal_set_d(const std::string& value) {
+  
+  d_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArenaForAllocation());
+}
+inline std::string* UpdateRequestMessage_Rose_2::_internal_mutable_d() {
+  
+  return d_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArenaForAllocation());
+}
+inline std::string* UpdateRequestMessage_Rose_2::release_d() {
+  // @@protoc_insertion_point(field_release:DistSSE.UpdateRequestMessage_Rose_2.D)
+  return d_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArenaForAllocation());
+}
+inline void UpdateRequestMessage_Rose_2::set_allocated_d(std::string* d) {
+  if (d != nullptr) {
+    
+  } else {
+    
+  }
+  d_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), d,
+      GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (d_.IsDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited())) {
+    d_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:DistSSE.UpdateRequestMessage_Rose_2.D)
 }
 
 // -------------------------------------------------------------------

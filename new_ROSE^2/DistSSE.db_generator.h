@@ -244,8 +244,13 @@ namespace DistSSE {
 //        // client->end_update_session();
 //    }
 
-
-
+    static void padd(std::string& input,int length){
+        if(input.length() < length){
+            std::string pad(length - input.length(),'#');
+            input = pad + input;
+            std::cout<<"padd:"<<input<<std::endl;
+        }
+	}
     /**
     *
     * @param client
@@ -255,16 +260,18 @@ namespace DistSSE {
     * 
     * gen_db相当于一个独立的功能，在搜索之前根据已有的数据构建rocksdb数据库
     */
-    static void generation_job(Client *client, std::string keyword, unsigned int thread_id, size_t N_entries) {
+    static void generation_job(Client *client, std::string keyword, unsigned int thread_id, size_t N_entries, int flag) {
         //std::string id_string = std::to_string(thread_id);
         CryptoPP::AutoSeededRandomPool prng;
         int ind_len = AES::BLOCKSIZE / 2; // AES::BLOCKSIZE = 16
         byte tmp[ind_len];
         for (size_t i = 0; i < N_entries; i++) {
-            prng.GenerateBlock(tmp, sizeof(tmp));
+            //prng.GenerateBlock(tmp, sizeof(tmp));
             //随机生成
-            std::string ind = /*Util.str2hex*/(std::string((const char *) tmp, ind_len));
-            client->Update_Rose_2(keyword, ind ,1);
+            //std::string ind = /*Util.str2hex*/(std::string((const char *) tmp, ind_len));
+            std::string ind = std::to_string(i);
+			padd(ind,ind_len);
+            client->Update_Rose_2(keyword, ind , flag);
             //writer->Write(client->gen_update_request("1", keyword, ind));
         }
         // now tell server we have finished
@@ -281,7 +288,7 @@ namespace DistSSE {
       * @param keyword 关键词
       * @param n_threads 线程数
       */
-    void gen_db_random(Client &client, size_t N_entries,std::string keyword, unsigned int n_threads) {
+    void gen_db_random(Client &client, size_t N_entries,std::string keyword, unsigned int n_threads,int flag) {
         logger::log(logger::INFO) << "in gen_db_2" << std::endl;
         // std::atomic_size_t entries_counter(0);
         // client->start_update_session();
@@ -296,9 +303,9 @@ namespace DistSSE {
         //logger::log(logger::INFO) << log << std::endl;
         //logger::log(logger::INFO) << std::to_string(numOfEntries1)+" "+std::to_string(numOfEntries2) << std::endl;
         for (unsigned int i = 0; i < n_threads - 1; i++) {
-            threads.push_back(std::thread(generation_job, &client, keyword, i, numOfEntries1));
+            threads.push_back(std::thread(generation_job, &client, keyword, i, numOfEntries1, flag));
         }
-        threads.push_back(std::thread(generation_job, &client,keyword, n_threads - 1, numOfEntries2));
+        threads.push_back(std::thread(generation_job, &client,keyword, n_threads - 1, numOfEntries2, flag));
         for (unsigned int i = 0; i < n_threads; i++) {
             threads[i].join();
         }
@@ -339,28 +346,28 @@ namespace DistSSE {
         logger::log(logger::INFO) << log << std::endl;
     }
 
-    static void generation_job_Rose_2(Client* client,const map<string,string>& serverEDB, unsigned int thread_id, size_t N_entries) {
-        // for gRPC
-        UpdateRequestMessage_Rose_2 request;
-        ClientContext context;
-        ExecuteStatus exec_status;
-        struct timeval t1, t2;
-        std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials())));
-        std::unique_ptr <ClientWriterInterface<UpdateRequestMessage_Rose_2>> writer(stub_->batch_update_Rose_2(&context, &exec_status)); //batch_update是流式传输
-        for(auto iter = serverEDB.begin(); iter!= serverEDB.end(); iter++){
-            writer->Write(client->gen_update_request_Rose_2(
-                iter->first,
-                iter->second
-            ));   
-        }
+    // static void generation_job_Rose_2(Client* client,const map<string,string>& serverEDB, unsigned int thread_id, size_t N_entries) {
+    //     // for gRPC
+    //     UpdateRequestMessage_Rose_2 request;
+    //     ClientContext context;
+    //     ExecuteStatus exec_status;
+    //     struct timeval t1, t2;
+    //     std::unique_ptr <RPC::Stub> stub_(RPC::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials())));
+    //     std::unique_ptr <ClientWriterInterface<UpdateRequestMessage_Rose_2>> writer(stub_->batch_update_Rose_2(&context, &exec_status)); //batch_update是流式传输
+    //     for(auto iter = serverEDB.begin(); iter!= serverEDB.end(); iter++){
+    //         writer->Write(client->gen_update_request_Rose_2(
+    //             iter->first,
+    //             iter->second
+    //         ));   
+    //     }
 
-        // now tell server we have finished
-        writer->WritesDone();
-        Status status = writer->Finish();
-        std::string log = "DB generation: thread " + std::to_string(thread_id) + " completed: " +
-                          std::to_string(N_entries) + " keyword-filename";
-        logger::log(logger::INFO) << log << std::endl;
-    }
+    //     // now tell server we have finished
+    //     writer->WritesDone();
+    //     Status status = writer->Finish();
+    //     std::string log = "DB generation: thread " + std::to_string(thread_id) + " completed: " +
+    //                       std::to_string(N_entries) + " keyword-filename";
+    //     logger::log(logger::INFO) << log << std::endl;
+    // }
 
     /**
       *

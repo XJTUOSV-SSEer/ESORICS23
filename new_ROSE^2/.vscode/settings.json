@@ -96,7 +96,9 @@
         "forward_list": "cpp",
         "shared_mutex": "cpp",
         "valarray": "cpp",
-        "charconv": "cpp"
+        "charconv": "cpp",
+        "*.inc": "cpp",
+        "__functional_base_03": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

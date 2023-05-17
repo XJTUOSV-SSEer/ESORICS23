@@ -66,7 +66,8 @@ namespace DistSSE {
         std::map<std::string,int> LastId;
         std::map<std::string, std::string> LastK, LastS, LastR;
         std::map<std::string, OpType> LastOp;
-        int N = 131072; //2^17
+        //int N = 16384; //2^14
+        int N = 1024; //2^10
     
 
         int Enc_id(std::string &C_out, const int id)
@@ -251,8 +252,14 @@ namespace DistSSE {
             return insertMessage;
         } 
 
-        std::string gen_zero_L(int length){
-            return string(length,'0');
+        std::string gen_zero_L(int length, string K_u, KUPRF kuprf){
+            string L;
+            unsigned char buf_L[256];
+            string zero(length,'0');
+            std::string hash = Util::H1(zero);
+            kuprf.Eval(buf_L, (unsigned char*)K_u.c_str(), hash);
+            L.assign((char*)buf_L,33);
+            return L;
         }
 
         int Update_Rose_2(std::string w, std::string id, int op){
@@ -291,7 +298,7 @@ namespace DistSSE {
                     cnt_i = 0;
                     cnt_d = 0;
                     sn = 0;
-                    lastL = gen_zero_L(33);
+                    lastL = gen_zero_L(33, K_u, kuprf);
                 }else{
                     K_u = ST[w].K_u;
                     delta_k = ST[w].delta_k;
@@ -307,20 +314,25 @@ namespace DistSSE {
                 ExecuteStatus exec_status;
                 stub_->OMAPInsert(&context1,insertMessage,&exec_status);
                 sn = getSn_Rose_2(cnt_i);
-                ST[w].K_u = K_u;
-                ST[w].delta_k = delta_k;
-                ST[w].cnt_i = cnt_i;
-                ST[w].cnt_d = cnt_d;
-                ST[w].sn = sn;
                 
                 PRF_F(buf_PRF, K_f, w);
                 PRF.assign((char*) buf_PRF, 32);
                 std::string hash = Util::H1(PRF+std::to_string(cnt_i)+"1");
                 kuprf.Eval(buf_kuprf, (unsigned char*)K_u.c_str(), hash);
                 L.assign((char*) buf_kuprf, 33);
+                // cout<<cnt_i<<"-L:"<<Util::str2hex(L)<<endl;
                 D = Util::Xor(hash + "0",lastL);
+                // cout<<cnt_i<<"-lastL:"<<Util::str2hex(lastL)<<endl;
+                // cout<<cnt_i<<"-D:"<<Util::str2hex(D)<<endl;
                 //print_hex((unsigned char*)L.c_str(),L.length());
                 C = Util::Enc(K_s,16,id);
+                // cout<<cnt_i<<"-C:"<<Util::str2hex(C)<<endl;
+                ST[w].K_u = K_u;
+                ST[w].delta_k = delta_k;
+                ST[w].cnt_i = cnt_i;
+                ST[w].cnt_d = cnt_d;
+                ST[w].sn = sn;
+                ST[w].lastL = L;
                 //send to server
                 ClientContext context3;
                 UpdateRequestMessage_Rose_2 request;
@@ -379,6 +391,7 @@ namespace DistSSE {
                         }
                     }else{
                         In = StringToIn(batchFindReply.value(i));
+                        cout<<batchFindReply.value(i)<<endl;
                     }
                     if(In.Num != -1){
                         Ins.push_back(In);
@@ -441,9 +454,9 @@ namespace DistSSE {
                     Ins[i].Num++;
                     //OD_tree[make_pair(w,Ins[i].Node)] = Ins[i];
                     writer->Write(gen_insertMessage(w,to_string(Ins[i].Node),1,InToString(Ins[i])));
-                    // cout<<"发送n:"<<Ins[i].Node<<endl;
-                    // cout<<"value:"<<InToString(Ins[i])<<endl;
-                    // cout<<"num:"<<Ins[i].Num<<endl;
+                    cout<<"发送n:"<<Ins[i].Node<<endl;
+                    cout<<"value:"<<InToString(Ins[i])<<endl;
+                    cout<<"num:"<<Ins[i].Num<<endl;
                     PRF_F(buf_PRF, K_f, w);
                     PRF.assign((char*) buf_PRF, 32);
                     std::string hash = Util::H1(PRF + std::to_string(Ins[i].Node) + std::to_string(Ins[i].Num));
@@ -452,7 +465,7 @@ namespace DistSSE {
                     L.assign((char*) buf_kuprf, 33);
                     //print_hex((unsigned char*)L.c_str(),L.length());
                     C = encrypt_Rose_2(hash ,Ins[i].lNode,Ins[i].lNum,Ins[i].rNode,Ins[i].rNum);
-                    D = Util::Xor(hash + "0", gen_zero_L(33));
+                    D = Util::Xor(hash + "0", gen_zero_L(33, K_u, kuprf));
                     //send to server
                     UpdateRequestMessage_Rose_2 request = gen_update_request_Rose_2(L,C,D);
                     writer2->Write(request);
@@ -897,16 +910,17 @@ namespace DistSSE {
                 //logger::log(logger::INFO) << reply.ind() << std::endl;
                 counter++;
                 result.insert(reply.c());
+                cout<<Util::str2hex(reply.c())<<endl;
             }
             logger::log(logger::INFO) << " search result counter: " << counter << std::endl;
             logger::log(logger::INFO) << " search set result: " << result.size() << std::endl;
             gettimeofday(&t2, NULL);
             //输出到日志文件
-            logger::log_benchmark()<< "keyword: "+ w +" "+ std::to_string(counter)+" entries "+"update time: "
+            logger::log_benchmark()<< "keyword: "+ w +" "+ std::to_string(counter)+" entries "+"search time: "
                                << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
                                << std::endl;
             //输出到终端
-            logger::log(logger::INFO)<< "keyword: "+ w +" "+ std::to_string(counter)+" entries "+"update time: "
+            logger::log(logger::INFO)<< "keyword: "+ w +" "+ std::to_string(counter)+" entries "+"search time: "
                                  << ((t2.tv_sec - t1.tv_sec) * 1000000.0 + t2.tv_usec - t1.tv_usec) / 1000.0 << " ms"
                                  << std::endl;
             return "OK";

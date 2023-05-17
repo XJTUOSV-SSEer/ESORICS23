@@ -36,12 +36,19 @@ int main(int argc, char **argv) {
         std::string id = std::string(argv[4]);
         client.Update_Rose_2(keyword,id,0);
         std::cout << "update(del) done." << std::endl;
+    }else if(argc == 7 && flag == 7){
+        //batch_del
+        std::string keyword = std::string(argv[3]);
+        int N_entries = atoi(argv[4]);
+        int thread_num = atoi(argv[5]);
+        DistSSE::gen_db_random(client,N_entries,keyword,thread_num,0);
+        std::cout << "batch update(del) done." << std::endl;
     }else if(argc == 7 && flag == 5){
         //genramdomdb
         std::string keyword = std::string(argv[3]);
         int N_entries = atoi(argv[4]);
         int thread_num = atoi(argv[5]);
-        DistSSE::gen_db_random(client,N_entries,keyword,thread_num);
+        DistSSE::gen_db_random(client,N_entries,keyword,thread_num,1);
         std::cout << "gendb done." << std::endl;
     }else{
         std::cerr << "argc error" << std::endl;

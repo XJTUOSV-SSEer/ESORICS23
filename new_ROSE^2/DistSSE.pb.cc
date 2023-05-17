@@ -87,7 +87,8 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT OMAPInsertMessageDefaultTypeInt
 constexpr UpdateRequestMessage_Rose_2::UpdateRequestMessage_Rose_2(
   ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
   : l_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
-  , c_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string){}
+  , c_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
+  , d_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string){}
 struct UpdateRequestMessage_Rose_2DefaultTypeInternal {
   constexpr UpdateRequestMessage_Rose_2DefaultTypeInternal()
     : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
@@ -263,6 +264,7 @@ const uint32_t TableStruct_DistSSE_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::DistSSE::UpdateRequestMessage_Rose_2, l_),
   PROTOBUF_FIELD_OFFSET(::DistSSE::UpdateRequestMessage_Rose_2, c_),
+  PROTOBUF_FIELD_OFFSET(::DistSSE::UpdateRequestMessage_Rose_2, d_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::DistSSE::SearchRequestMessage_Rose_2, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -341,14 +343,14 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOB
   { 25, -1, -1, sizeof(::DistSSE::OMAPFindReply)},
   { 32, -1, -1, sizeof(::DistSSE::OMAPInsertMessage)},
   { 42, -1, -1, sizeof(::DistSSE::UpdateRequestMessage_Rose_2)},
-  { 50, -1, -1, sizeof(::DistSSE::SearchRequestMessage_Rose_2)},
-  { 62, -1, -1, sizeof(::DistSSE::SearchReply_Rose_2)},
-  { 69, -1, -1, sizeof(::DistSSE::SetupRequestMessage)},
-  { 76, -1, -1, sizeof(::DistSSE::SearchRequestMessage)},
-  { 88, -1, -1, sizeof(::DistSSE::SearchReply)},
-  { 95, -1, -1, sizeof(::DistSSE::CacheRequestMessage)},
-  { 103, -1, -1, sizeof(::DistSSE::UpdateRequestMessage)},
-  { 113, -1, -1, sizeof(::DistSSE::ExecuteStatus)},
+  { 51, -1, -1, sizeof(::DistSSE::SearchRequestMessage_Rose_2)},
+  { 63, -1, -1, sizeof(::DistSSE::SearchReply_Rose_2)},
+  { 70, -1, -1, sizeof(::DistSSE::SetupRequestMessage)},
+  { 77, -1, -1, sizeof(::DistSSE::SearchRequestMessage)},
+  { 89, -1, -1, sizeof(::DistSSE::SearchReply)},
+  { 96, -1, -1, sizeof(::DistSSE::CacheRequestMessage)},
+  { 104, -1, -1, sizeof(::DistSSE::UpdateRequestMessage)},
+  { 114, -1, -1, sizeof(::DistSSE::ExecuteStatus)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -377,55 +379,55 @@ const char descriptor_table_protodef_DistSSE_2eproto[] PROTOBUF_SECTION_VARIABLE
   "\014\n\004flag\030\003 \001(\r\"\036\n\rOMAPFindReply\022\r\n\005value\030"
   "\001 \001(\014\"J\n\021OMAPInsertMessage\022\t\n\001w\030\001 \001(\014\022\r\n"
   "\005idorn\030\002 \001(\014\022\014\n\004flag\030\003 \001(\r\022\r\n\005value\030\004 \001("
-  "\014\"3\n\033UpdateRequestMessage_Rose_2\022\t\n\001L\030\001 "
-  "\001(\014\022\t\n\001C\030\002 \001(\014\"q\n\033SearchRequestMessage_R"
-  "ose_2\022\013\n\003K_u\030\001 \001(\014\022\017\n\007delta_k\030\002 \001(\014\022\n\n\002t"
-  "k\030\003 \001(\014\022\n\n\002sn\030\004 \001(\r\022\r\n\005cnt_d\030\005 \001(\r\022\r\n\005cn"
-  "t_i\030\006 \001(\r\"\037\n\022SearchReply_Rose_2\022\t\n\001C\030\001 \001"
-  "(\014\")\n\023SetupRequestMessage\022\022\n\nsetup_size\030"
-  "\001 \001(\004\"`\n\024SearchRequestMessage\022\r\n\005tpd_L\030\001"
-  " \001(\014\022\r\n\005tpd_T\030\002 \001(\014\022\t\n\001L\030\003 \001(\014\022\t\n\001R\030\004 \001("
-  "\014\022\t\n\001D\030\005 \001(\014\022\t\n\001C\030\006 \001(\014\"\032\n\013SearchReply\022\013"
-  "\n\003ind\030\001 \001(\014\"/\n\023CacheRequestMessage\022\n\n\002tw"
-  "\030\001 \001(\014\022\014\n\004inds\030\002 \001(\014\"B\n\024UpdateRequestMes"
-  "sage\022\t\n\001L\030\001 \001(\014\022\t\n\001R\030\002 \001(\014\022\t\n\001D\030\003 \001(\014\022\t\n"
-  "\001C\030\004 \001(\014\"\037\n\rExecuteStatus\022\016\n\006status\030\001 \001("
-  "\0102\331\010\n\003RPC\022\?\n\005setup\022\034.DistSSE.SetupReques"
-  "tMessage\032\026.DistSSE.ExecuteStatus\"\000\022A\n\006se"
-  "arch\022\035.DistSSE.SearchRequestMessage\032\024.Di"
-  "stSSE.SearchReply\"\0000\001\022F\n\013search_rose\022\035.D"
-  "istSSE.SearchRequestMessage\032\024.DistSSE.Se"
-  "archReply\"\0000\001\022V\n\rsearch_Rose_2\022$.DistSSE"
-  ".SearchRequestMessage_Rose_2\032\033.DistSSE.S"
-  "earchReply_Rose_2\"\0000\001\022A\n\006update\022\035.DistSS"
-  "E.UpdateRequestMessage\032\026.DistSSE.Execute"
-  "Status\"\000\022O\n\rupdate_Rose_2\022$.DistSSE.Upda"
-  "teRequestMessage_Rose_2\032\026.DistSSE.Execut"
-  "eStatus\"\000\022I\n\014batch_update\022\035.DistSSE.Upda"
-  "teRequestMessage\032\026.DistSSE.ExecuteStatus"
-  "\"\000(\001\022N\n\021batch_update_rose\022\035.DistSSE.Upda"
-  "teRequestMessage\032\026.DistSSE.ExecuteStatus"
-  "\"\000(\001\022W\n\023batch_update_Rose_2\022$.DistSSE.Up"
-  "dateRequestMessage_Rose_2\032\026.DistSSE.Exec"
-  "uteStatus\"\000(\001\022\?\n\005cache\022\034.DistSSE.CacheRe"
-  "questMessage\032\026.DistSSE.ExecuteStatus\"\000\022G"
-  "\n\013batch_cache\022\034.DistSSE.CacheRequestMess"
-  "age\032\026.DistSSE.ExecuteStatus\"\000(\001\022>\n\010OMAPF"
-  "ind\022\030.DistSSE.OMAPFindMessage\032\026.DistSSE."
-  "OMAPFindReply\"\000\022B\n\nOMAPInsert\022\032.DistSSE."
-  "OMAPInsertMessage\032\026.DistSSE.ExecuteStatu"
-  "s\"\000\022M\n\rbatchOMAPFind\022\035.DistSSE.batchOMAP"
-  "FindMessage\032\033.DistSSE.batchOMAPFindReply"
-  "\"\000\022I\n\017batchOMAPInsert\022\032.DistSSE.OMAPInse"
-  "rtMessage\032\026.DistSSE.ExecuteStatus\"\000(\001b\006p"
-  "roto3"
+  "\014\">\n\033UpdateRequestMessage_Rose_2\022\t\n\001L\030\001 "
+  "\001(\014\022\t\n\001C\030\002 \001(\014\022\t\n\001D\030\003 \001(\014\"q\n\033SearchReque"
+  "stMessage_Rose_2\022\013\n\003K_u\030\001 \001(\014\022\017\n\007delta_k"
+  "\030\002 \001(\014\022\n\n\002tk\030\003 \001(\014\022\n\n\002sn\030\004 \001(\r\022\r\n\005cnt_d\030"
+  "\005 \001(\r\022\r\n\005cnt_i\030\006 \001(\r\"\037\n\022SearchReply_Rose"
+  "_2\022\t\n\001C\030\001 \001(\014\")\n\023SetupRequestMessage\022\022\n\n"
+  "setup_size\030\001 \001(\004\"`\n\024SearchRequestMessage"
+  "\022\r\n\005tpd_L\030\001 \001(\014\022\r\n\005tpd_T\030\002 \001(\014\022\t\n\001L\030\003 \001("
+  "\014\022\t\n\001R\030\004 \001(\014\022\t\n\001D\030\005 \001(\014\022\t\n\001C\030\006 \001(\014\"\032\n\013Se"
+  "archReply\022\013\n\003ind\030\001 \001(\014\"/\n\023CacheRequestMe"
+  "ssage\022\n\n\002tw\030\001 \001(\014\022\014\n\004inds\030\002 \001(\014\"B\n\024Updat"
+  "eRequestMessage\022\t\n\001L\030\001 \001(\014\022\t\n\001R\030\002 \001(\014\022\t\n"
+  "\001D\030\003 \001(\014\022\t\n\001C\030\004 \001(\014\"\037\n\rExecuteStatus\022\016\n\006"
+  "status\030\001 \001(\0102\331\010\n\003RPC\022\?\n\005setup\022\034.DistSSE."
+  "SetupRequestMessage\032\026.DistSSE.ExecuteSta"
+  "tus\"\000\022A\n\006search\022\035.DistSSE.SearchRequestM"
+  "essage\032\024.DistSSE.SearchReply\"\0000\001\022F\n\013sear"
+  "ch_rose\022\035.DistSSE.SearchRequestMessage\032\024"
+  ".DistSSE.SearchReply\"\0000\001\022V\n\rsearch_Rose_"
+  "2\022$.DistSSE.SearchRequestMessage_Rose_2\032"
+  "\033.DistSSE.SearchReply_Rose_2\"\0000\001\022A\n\006upda"
+  "te\022\035.DistSSE.UpdateRequestMessage\032\026.Dist"
+  "SSE.ExecuteStatus\"\000\022O\n\rupdate_Rose_2\022$.D"
+  "istSSE.UpdateRequestMessage_Rose_2\032\026.Dis"
+  "tSSE.ExecuteStatus\"\000\022I\n\014batch_update\022\035.D"
+  "istSSE.UpdateRequestMessage\032\026.DistSSE.Ex"
+  "ecuteStatus\"\000(\001\022N\n\021batch_update_rose\022\035.D"
+  "istSSE.UpdateRequestMessage\032\026.DistSSE.Ex"
+  "ecuteStatus\"\000(\001\022W\n\023batch_update_Rose_2\022$"
+  ".DistSSE.UpdateRequestMessage_Rose_2\032\026.D"
+  "istSSE.ExecuteStatus\"\000(\001\022\?\n\005cache\022\034.Dist"
+  "SSE.CacheRequestMessage\032\026.DistSSE.Execut"
+  "eStatus\"\000\022G\n\013batch_cache\022\034.DistSSE.Cache"
+  "RequestMessage\032\026.DistSSE.ExecuteStatus\"\000"
+  "(\001\022>\n\010OMAPFind\022\030.DistSSE.OMAPFindMessage"
+  "\032\026.DistSSE.OMAPFindReply\"\000\022B\n\nOMAPInsert"
+  "\022\032.DistSSE.OMAPInsertMessage\032\026.DistSSE.E"
+  "xecuteStatus\"\000\022M\n\rbatchOMAPFind\022\035.DistSS"
+  "E.batchOMAPFindMessage\032\033.DistSSE.batchOM"
+  "APFindReply\"\000\022I\n\017batchOMAPInsert\022\032.DistS"
+  "SE.OMAPInsertMessage\032\026.DistSSE.ExecuteSt"
+  "atus\"\000(\001b\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_DistSSE_2eproto_deps[1] = {
   &::descriptor_table_google_2fprotobuf_2fempty_2eproto,
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_DistSSE_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_DistSSE_2eproto = {
-  false, false, 1965, descriptor_table_protodef_DistSSE_2eproto, "DistSSE.proto", 
+  false, false, 1976, descriptor_table_protodef_DistSSE_2eproto, "DistSSE.proto", 
   &descriptor_table_DistSSE_2eproto_once, descriptor_table_DistSSE_2eproto_deps, 1, 14,
   schemas, file_default_instances, TableStruct_DistSSE_2eproto::offsets,
   file_level_metadata_DistSSE_2eproto, file_level_enum_descriptors_DistSSE_2eproto, file_level_service_descriptors_DistSSE_2eproto,
@@ -1692,6 +1694,14 @@ UpdateRequestMessage_Rose_2::UpdateRequestMessage_Rose_2(const UpdateRequestMess
     c_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_c(), 
       GetArenaForAllocation());
   }
+  d_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    d_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_d().empty()) {
+    d_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_d(), 
+      GetArenaForAllocation());
+  }
   // @@protoc_insertion_point(copy_constructor:DistSSE.UpdateRequestMessage_Rose_2)
 }
 
@@ -1703,6 +1713,10 @@ l_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyIni
 c_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
   c_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+d_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  d_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
@@ -1717,6 +1731,7 @@ inline void UpdateRequestMessage_Rose_2::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
   l_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   c_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  d_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void UpdateRequestMessage_Rose_2::ArenaDtor(void* object) {
@@ -1737,6 +1752,7 @@ void UpdateRequestMessage_Rose_2::Clear() {
 
   l_.ClearToEmpty();
   c_.ClearToEmpty();
+  d_.ClearToEmpty();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1759,6 +1775,15 @@ const char* UpdateRequestMessage_Rose_2::_InternalParse(const char* ptr, ::PROTO
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_c();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // bytes D = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          auto str = _internal_mutable_d();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
         } else
@@ -1805,6 +1830,12 @@ uint8_t* UpdateRequestMessage_Rose_2::_InternalSerialize(
         2, this->_internal_c(), target);
   }
 
+  // bytes D = 3;
+  if (!this->_internal_d().empty()) {
+    target = stream->WriteBytesMaybeAliased(
+        3, this->_internal_d(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -1835,6 +1866,13 @@ size_t UpdateRequestMessage_Rose_2::ByteSizeLong() const {
         this->_internal_c());
   }
 
+  // bytes D = 3;
+  if (!this->_internal_d().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
+        this->_internal_d());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_cached_size_);
 }
 
@@ -1862,6 +1900,9 @@ void UpdateRequestMessage_Rose_2::MergeFrom(const UpdateRequestMessage_Rose_2& f
   }
   if (!from._internal_c().empty()) {
     _internal_set_c(from._internal_c());
+  }
+  if (!from._internal_d().empty()) {
+    _internal_set_d(from._internal_d());
   }
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -1891,6 +1932,11 @@ void UpdateRequestMessage_Rose_2::InternalSwap(UpdateRequestMessage_Rose_2* othe
       &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
       &c_, lhs_arena,
       &other->c_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      &d_, lhs_arena,
+      &other->d_, rhs_arena
   );
 }
 
