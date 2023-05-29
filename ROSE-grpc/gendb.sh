@@ -1,1 +1,0 @@
-./rpc_client ./database/my.cdb 1 1 keyword 100000 benchmark_client_rose_gen_db.out
